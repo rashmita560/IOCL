@@ -38,6 +38,24 @@
         if (empId.StartsWith("0")) return $"HR - {empId}";
         return $"Employee - {empId}";
     }
+
+    string GetGMDisplayName()
+    {
+        var gmRole = DbContext.Roles.FirstOrDefault(r => r.Name == "GM");
+        if (gmRole == null) return "20000001";
+        var gmUser = DbContext.Users.FirstOrDefault(u => 
+            DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == gmRole.Id));
+        return gmUser?.EmployeeId ?? "20000001";
+    }
+
+    string GetHRDisplayName()
+    {
+        var hrRole = DbContext.Roles.FirstOrDefault(r => r.Name == "SuperAdmin");
+        if (hrRole == null) return "00000001";
+        var hrUser = DbContext.Users.FirstOrDefault(u => 
+            DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hrRole.Id));
+        return hrUser?.EmployeeId ?? "00000001";
+    }
 }
 
 <!-- Hero Banner -->
@@ -207,8 +225,8 @@
                                             {
                                                 <span class="badge badge-pending iocl-badge">
                                                     @(req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(req.User?.Department)})" : 
-                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingGM ? $"Pending to GM ({GetGMDisplayName()})" : 
-                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHR ? $"Pending to HR ({GetHRDisplayName()})" : "Pending")
+                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingGM ? $"Pending with GM ({GetGMDisplayName()})" : 
+                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHR ? $"Pending with HR ({GetHRDisplayName()})" : "Pending")
                                                 </span>
                                             }
                                             else if (req.Status == RequestStatus.Approved)
