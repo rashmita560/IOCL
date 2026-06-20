@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Rental Requests – IOCL Community Hall Management</title>
+    <meta name="description" content="IOCL Panipat Refinery Township Community Hall Rental Management System" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="/css/iocl.css?v=1FTPMgdO5zBYKaawPnO3X2Z3xrQeMKFRBS7PcpQL06k" rel="stylesheet" />
+</head>
+<body class="iocl-layout">
+
+    <!-- ═══════════════════════════════ TOP HEADER ═══════════════════════════════ -->
+    <header class="iocl-header bg-white shadow-sm py-2 px-4 d-flex justify-content-between align-items-center">
+        <!-- Logo -->
+        <div class="iocl-brand d-flex align-items-center gap-2">
+            <a href="/" class="iocl-logo-link">
+                <img src="https://iocl.com/assets/images/logo.gif" alt="IOCL Logo" style="height: 48px; object-fit: contain;" onerror="this.src='/images/iocl-logo.png'" />
+            </a>
+            <div class="iocl-app-title ms-2">
+                <div class="iocl-org-name font-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.8px; font-weight: 700; color: #003399;">Indian Oil Corporation Limited</div>
+                <div class="iocl-portal-name font-black text-dark" style="font-size: 1.05rem; font-weight: 800; color: #1e293b; letter-spacing: -0.2px;">Community Hall & Inventory Portal</div>
+            </div>
+        </div>
+
+        <!-- Right: Social, Notification, Profile -->
+        <div class="iocl-header-controls d-flex align-items-center gap-3">
+            <!-- Social Media Icons -->
+            <div class="social-icons d-none d-lg-flex gap-1 me-3">
+                <a href="https://facebook.com" target="_blank" class="social-icon facebook"><i class="bi bi-facebook"></i></a>
+                <a href="https://twitter.com" target="_blank" class="social-icon twitter"><i class="bi bi-twitter-x"></i></a>
+                <a href="https://youtube.com" target="_blank" class="social-icon youtube"><i class="bi bi-youtube"></i></a>
+                <a href="https://instagram.com" target="_blank" class="social-icon instagram"><i class="bi bi-instagram"></i></a>
+                <a href="https://linkedin.com" target="_blank" class="social-icon linkedin"><i class="bi bi-linkedin"></i></a>
+            </div>
+
+            <!-- Notification Bell -->
+            <div class="dropdown">
+                <button class="btn iocl-icon-btn position-relative" data-bs-toggle="dropdown" id="notifBellBtn" style="border: 1px solid #e2e8f0; border-radius: 50%; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; background-color: #f8fafc; color: #64748b; padding: 0;">
+                    <i class="bi bi-bell-fill"></i>
+                        <span class="notification-badge" style="position: absolute; top: -3px; right: -3px; background: linear-gradient(135deg, #FF6600, #FF8C42); color: #FFFFFF; font-size: 0.62rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 10px; border: 2px solid #FFFFFF;">27</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end notif-dropdown" style="min-width:320px">
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                        <strong>Notifications</strong>
+                        <a class="btn btn-sm btn-link text-decoration-none" href="/Notification/MarkAllRead">Mark all read</a>
+                    </div>
+                    
+<div class="notif-list-container" id="headerNotifContainer">
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Request Cancelled</span>
+                    <span class="notif-time text-muted">20-06-2026 18:07</span>
+                </div>
+                <div class="notif-msg text-muted small">Your rental request #IOCL-REQ-2026-0053 has been cancelled successfully.</div>
+                    <div class="mt-1">
+                        <a href="/RentalRequest/MyRequests" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="250">View Details</a>
+                    </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Request Fully Approved &#x2713;</span>
+                    <span class="notif-time text-muted">20-06-2026 18:07</span>
+                </div>
+                <div class="notif-msg text-muted small">Your rental request #IOCL-REQ-2026-0053 has been fully approved and inventory allocated.</div>
+                    <div class="mt-1">
+                        <a href="/RentalRequest/MyRequests" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="249">View Details</a>
+                    </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Request Update &#x2014; Stage HOD Approved</span>
+                    <span class="notif-time text-muted">20-06-2026 18:07</span>
+                </div>
+                <div class="notif-msg text-muted small">Your request #IOCL-REQ-2026-0053 was approved by HOD. Next: awaiting SuperAdmin approval.</div>
+                    <div class="mt-1">
+                        <a href="/RentalRequest/MyRequests" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="248">View Details</a>
+                    </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Request Cancelled</span>
+                    <span class="notif-time text-muted">20-06-2026 18:00</span>
+                </div>
+                <div class="notif-msg text-muted small">Your rental request #IOCL-REQ-2026-0052 has been cancelled successfully.</div>
+                    <div class="mt-1">
+                        <a href="/RentalRequest/MyRequests" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="243">View Details</a>
+                    </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Request Fully Approved &#x2713;</span>
+                    <span class="notif-time text-muted">20-06-2026 18:00</span>
+                </div>
+                <div class="notif-msg text-muted small">Your rental request #IOCL-REQ-2026-0052 has been fully approved and inventory allocated.</div>
+                    <div class="mt-1">
+                        <a href="/RentalRequest/MyRequests" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="242">View Details</a>
+                    </div>
+            </div>
+</div>
+
+                    <div class="text-center py-2 border-top">
+                        <a class="btn btn-sm text-primary text-decoration-none fw-bold" href="/Notification">View All</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Dropdown -->
+            <div class="dropdown">
+                <button class="btn dropdown-toggle border-0 p-0 bg-transparent d-flex align-items-center gap-2" data-bs-toggle="dropdown" style="color: inherit; box-shadow: none;">
+                    <div class="text-end d-none d-md-block" style="line-height: 1.25;">
+                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">Rajesh Sharma</div>
+                        <div class="text-muted text-uppercase" style="font-size: 0.68rem; font-weight: 600; letter-spacing: 0.3px;">Employee</div>
+                    </div>
+                    <div class="iocl-avatar" style="background-color: #0c1b3e; color: #FFFFFF; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; border: 2px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        R
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><h6 class="dropdown-header">rajesh.sharma@iocl.co.in</h6></li>
+                    <li><span class="dropdown-item-text text-muted small">Engineering &amp; Projects</span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="/Account/ChangePassword">
+                            <i class="bi bi-shield-lock me-2"></i>Change Password
+                        </a>
+                    </li>
+                    <li>
+                        <form method="post" action="/Account/Logout">
+                            <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                            </button>
+                        <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCrnlbyq28iKFLrqmpZJmHzjx8zSWfVMJLj5-jZ-JwaSt1guumaa5g7OCcdSeUlY_CPkeLFf0Qdwb-jRvdV9Wrh7LAGnS6zh-7IQDnm0xfKNl_dg0x3M7pGmKKzwSvYO8emGSQyxGkPkPJIRc8-1JdCiDWDhltLxXWotlUIf2HCzUA" /></form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════ TOP NAVIGATION BAR ═══════════════════════════════ -->
+    <nav class="navbar navbar-expand-lg navbar-dark iocl-navbar">
+        <div class="container-fluid">
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#ioclNavbarContent" aria-controls="ioclNavbarContent" aria-expanded="false" aria-label="Toggle navigation" style="padding: 0.25rem 0.5rem;">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="ioclNavbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link px-3 py-2 text-white " href="/UserDashboard">
+                                <i class="bi bi-grid-1x2 me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle px-3 py-2 text-white active-link" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-cart-plus me-1"></i>Rentals
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/RentalRequest/Create"><i class="bi bi-plus-circle me-2"></i>New Rental Request</a></li>
+                                <li><a class="dropdown-item" href="/RentalRequest/MyRequests"><i class="bi bi-card-list me-2"></i>My Requests</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-3 py-2 text-white " href="/Notification">
+                                <i class="bi bi-bell-fill me-1"></i>Notifications
+                            </a>
+                        </li>
+                </ul>
+                
+                <div class="d-none d-lg-flex align-items-center gap-3">
+                    <span class="text-uppercase fw-bold" style="color: #FF8C42; font-size: 0.85rem; letter-spacing: 1px;">PANIPAT REFINERY</span>
+                    <form method="post" class="m-0" action="/Account/Logout">
+                        <button type="submit" class="btn btn-link px-3 py-1 text-white text-decoration-none d-flex align-items-center gap-1 nav-exit-btn" style="font-size: 0.9rem; font-weight: 600;">
+                            <i class="bi bi-box-arrow-right"></i>Exit
+                        </button>
+                    <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCrnlbyq28iKFLrqmpZJmHzjx8zSWfVMJLj5-jZ-JwaSt1guumaa5g7OCcdSeUlY_CPkeLFf0Qdwb-jRvdV9Wrh7LAGnS6zh-7IQDnm0xfKNl_dg0x3M7pGmKKzwSvYO8emGSQyxGkPkPJIRc8-1JdCiDWDhltLxXWotlUIf2HCzUA" /></form>
+                </div>
+                
+                <!-- Mobile Exit/Refinery -->
+                <div class="d-lg-none mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="text-uppercase fw-bold" style="color: #FF8C42; font-size: 0.85rem; letter-spacing: 1px;">PANIPAT REFINERY</span>
+                    <form method="post" class="m-0" action="/Account/Logout">
+                        <button type="submit" class="btn btn-danger btn-sm px-3 fw-bold d-flex align-items-center gap-1">
+                            <i class="bi bi-box-arrow-right"></i>Exit
+                        </button>
+                    <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCrnlbyq28iKFLrqmpZJmHzjx8zSWfVMJLj5-jZ-JwaSt1guumaa5g7OCcdSeUlY_CPkeLFf0Qdwb-jRvdV9Wrh7LAGnS6zh-7IQDnm0xfKNl_dg0x3M7pGmKKzwSvYO8emGSQyxGkPkPJIRc8-1JdCiDWDhltLxXWotlUIf2HCzUA" /></form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="iocl-page-wrapper">
+
+        <!-- ═══════════════════════════════ MAIN CONTENT ════════════════════════ -->
+        <main class="iocl-main-content">
+            <!-- Breadcrumb / Page Title -->
+
+            <!-- Toast Alerts -->
+                <div class="alert alert-success alert-dismissible iocl-alert fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>Request #IOCL-REQ-2026-0054 submitted successfully! Status: Pending approval.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+            
+<div class="row">
+    <div class="col-12">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-stars me-2 text-primary"></i>My Rental Requests</span>
+                <a class="btn btn-sm btn-primary" href="/RentalRequest/Create"><i class="bi bi-cart-plus-fill me-1"></i>New Request</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Request No.</th>
+
+                                <th>Required From</th>
+                                <th>Required Until</th>
+                                <th>Total Cost</th>
+                                <th>Status</th>
+                                <th>Submitted On</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0054</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge badge-pending iocl-badge">
+                                                    Pending to HOD (30000001)
+                                                </span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 18:20</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-54">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0053</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 18:07</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-53">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0052</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 18:00</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-52">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0051</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 17:50</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-51">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0050</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 17:46</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-50">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0049</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 17:31</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-49">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0048</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 17:12</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-48">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0047</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 13:53</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-47">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0046</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 13:35</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-46">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0044</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">20 Jun 2026 12:29</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-44">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#IOCL-REQ-2026-0032</td>
+                                        <td>25 Jun 2026</td>
+                                        <td>26 Jun 2026</td>
+                                        <td class="fw-bold">₹500</td>
+                                        <td>                                                <span class="badge badge-pending iocl-badge">
+                                                    Pending to HOD (30000001)
+                                                </span>
+                                                  }
+                                        </td>
+                                        <td class="text-muted small">19 Jun 2026 06:46</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-32">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-54" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0054</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge badge-pending iocl-badge">
+                                        Pending to HOD (30000001)
+                                    </span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/229c93d2-4409-41c7-9642-017eddd6163c.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                                <form method="post" onsubmit="return confirm('Are you sure you want to cancel this request? This will release any allocated stock.');" class="d-inline" action="/RentalRequest/Cancel">
+                                    <input type="hidden" name="id" value="54" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-x-circle me-1"></i>Cancel Request
+                                    </button>
+                                <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCrnlbyq28iKFLrqmpZJmHzjx8zSWfVMJLj5-jZ-JwaSt1guumaa5g7OCcdSeUlY_CPkeLFf0Qdwb-jRvdV9Wrh7LAGnS6zh-7IQDnm0xfKNl_dg0x3M7pGmKKzwSvYO8emGSQyxGkPkPJIRc8-1JdCiDWDhltLxXWotlUIf2HCzUA" /></form>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-53" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0053</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/53ce5b49-4be6-4dd4-8eb4-ad7e3c6339f1.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-52" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0052</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/92697988-f783-478c-957f-8339d2e79378.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-51" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0051</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/f00c00bd-126d-4a87-a2ea-1cd0da8c50ad.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-50" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0050</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/53f4fc84-3966-499d-8a20-82f091a5b6e6.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-49" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0049</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/925889f8-8e7b-4cf9-be21-f7ac4bc67f75.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-48" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0048</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/f7f0b120-a282-4961-b35f-62ecc3f12c9d.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-47" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0047</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/ac7dcee5-5602-4702-9f52-6eb3fce57843.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-46" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0046</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="/uploads/documents/44b0899c-dfa9-4951-ab6d-4b9c722fab7f.pdf" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-44" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0044</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-32" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #IOCL-REQ-2026-0032</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                    <span class="badge badge-pending iocl-badge">
+                                        Pending to HOD (30000001)
+                                    </span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">25-06-2026</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">26-06-2026</div>
+                            </div>
+                        </div>
+
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td>LED Light String (10m)</td>
+                                        <td class="text-end">₹50</td>
+                                        <td class="text-center">10</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-end fw-bold">₹500.00</td>
+                                    </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹500</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                                <form method="post" onsubmit="return confirm('Are you sure you want to cancel this request? This will release any allocated stock.');" class="d-inline" action="/RentalRequest/Cancel">
+                                    <input type="hidden" name="id" value="32" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-x-circle me-1"></i>Cancel Request
+                                    </button>
+                                <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCrnlbyq28iKFLrqmpZJmHzjx8zSWfVMJLj5-jZ-JwaSt1guumaa5g7OCcdSeUlY_CPkeLFf0Qdwb-jRvdV9Wrh7LAGnS6zh-7IQDnm0xfKNl_dg0x3M7pGmKKzwSvYO8emGSQyxGkPkPJIRc8-1JdCiDWDhltLxXWotlUIf2HCzUA" /></form>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </main>
+    </div>
+
+    <!-- ═══════════════════════════════ FOOTER ══════════════════════════════════ -->
+    <footer class="iocl-footer">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <span>Developed for <strong>IOCL Panipat Refinery Township</strong></span>
+                </div>
+                <div class="col-md-6 text-center text-md-end text-muted small">
+                    &copy; 2026 Indian Oil Corporation Limited. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/js/iocl.js?v=NEfUiHVLz2SRBxJMg_ayVGjmT9G38e8vrR8JAzfXsaQ"></script>
+    
+</body>
+</html>

@@ -158,6 +158,89 @@ Namespace Services
                 End Using
             End Using
         End Function
+
+        Public Async Function ExportRentalRequestsExcelAsync(month As Integer, year As Integer) As Task(Of Byte()) Implements IReportService.ExportRentalRequestsExcelAsync
+            Dim startDate As New DateTime(year, month, 1)
+            Dim endDate As DateTime = startDate.AddMonths(1)
+
+            ' Fetch RentalRequests for the given month/year, including the submitting user
+            Dim requests = Await _context.RentalRequests _
+                .Include(Function(r) r.User) _
+                .Where(Function(r) r.CreatedAt >= startDate AndAlso r.CreatedAt < endDate) _
+                .OrderBy(Function(r) r.CreatedAt) _
+                .ToListAsync()
+
+            Dim monthName = New DateTime(year, month, 1).ToString("MMMM")
+            Using workbook As New XLWorkbook()
+                Dim ws = workbook.Worksheets.Add("Rental Requests Report")
+
+                ' ── Title row ──────────────────────────────────────────
+                ws.Cell(1, 1).Value = $"IOCL Panipat Township – Rental Requests Report ({monthName} {year})"
+                ws.Cell(1, 1).Style.Font.Bold = True
+                ws.Cell(1, 1).Style.Font.FontSize = 13
+                ws.Range(1, 1, 1, 14).Merge()
+                ws.Cell(2, 1).Value = $"Generated: {DateTime.Now:dd/MM/yyyy HH:mm}"
+                ws.Range(2, 1, 2, 14).Merge()
+
+                ' ── Header row ─────────────────────────────────────────
+                Dim headers() As String = {
+                    "Request No.", "Employee ID", "Event Date", "Start Date", "End Date",
+                    "Grand Total (₹)", "Status", "Approval Stage",
+                    "HOD Emp ID", "HOD Approved At",
+                    "GM Emp ID", "GM Approved At",
+                    "HR Emp ID", "HR Approved At",
+                    "Reviewed By Emp ID", "Reviewed At", "Rejection Reason", "Submitted At"
+                }
+                For col = 1 To headers.Length
+                    Dim cell = ws.Cell(4, col)
+                    cell.Value = headers(col - 1)
+                    cell.Style.Font.Bold = True
+                    cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1a3a6b")
+                    cell.Style.Font.FontColor = XLColor.White
+                    cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center
+                    cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin
+                Next
+
+                ' ── Data rows ──────────────────────────────────────────
+                Dim dataRow = 5
+                For Each req In requests
+                    ws.Cell(dataRow, 1).Value = req.RequestNumber
+                    ws.Cell(dataRow, 2).Value = If(req.User IsNot Nothing, req.User.EmployeeId, req.UserId)
+                    ws.Cell(dataRow, 3).Value = req.EventDate.ToString("dd/MM/yyyy")
+                    ws.Cell(dataRow, 4).Value = req.StartDate.ToString("dd/MM/yyyy")
+                    ws.Cell(dataRow, 5).Value = req.EndDate.ToString("dd/MM/yyyy")
+                    ws.Cell(dataRow, 6).Value = CDbl(req.GrandTotal)
+                    ws.Cell(dataRow, 6).Style.NumberFormat.Format = "#,##0.00"
+                    ws.Cell(dataRow, 7).Value = req.Status.ToString()
+                    ws.Cell(dataRow, 8).Value = req.ApprovalStage.ToString()
+                    ws.Cell(dataRow, 9).Value = req.HODApprovedByEmployeeId
+                    ws.Cell(dataRow, 10).Value = If(req.HODApprovedAt.HasValue, req.HODApprovedAt.Value.ToString("dd/MM/yyyy HH:mm"), "")
+                    ws.Cell(dataRow, 11).Value = req.GMApprovedByEmployeeId
+                    ws.Cell(dataRow, 12).Value = If(req.GMApprovedAt.HasValue, req.GMApprovedAt.Value.ToString("dd/MM/yyyy HH:mm"), "")
+                    ws.Cell(dataRow, 13).Value = req.HRApprovedByEmployeeId
+                    ws.Cell(dataRow, 14).Value = If(req.HRApprovedAt.HasValue, req.HRApprovedAt.Value.ToString("dd/MM/yyyy HH:mm"), "")
+                    ws.Cell(dataRow, 15).Value = req.ReviewedByEmployeeId
+                    ws.Cell(dataRow, 16).Value = If(req.ReviewedAt.HasValue, req.ReviewedAt.Value.ToString("dd/MM/yyyy HH:mm"), "")
+                    ws.Cell(dataRow, 17).Value = req.RejectionReason
+                    ws.Cell(dataRow, 18).Value = req.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+
+                    ' Alternate row shading
+                    If dataRow Mod 2 = 0 Then
+                        ws.Row(dataRow).Cells(1, headers.Length).Style.Fill.BackgroundColor = XLColor.FromHtml("#f0f4fb")
+                    End If
+                    dataRow += 1
+                Next
+
+                ' ── Format & auto-fit ──────────────────────────────────
+                ws.Columns().AdjustToContents()
+                ws.SheetView.FreezeRows(4) ' Freeze header
+
+                Using ms As New MemoryStream()
+                    workbook.SaveAs(ms)
+                    Return ms.ToArray()
+                End Using
+            End Using
+        End Function
     End Class
 
     Public Class AuditService

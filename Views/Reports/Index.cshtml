@@ -3,8 +3,89 @@
     ViewData["Title"] = "Reports & Analytics Center";
     var showResults = Model != null;
     var hasData = Model != null && Model.TotalRentals > 0;
+    var months = System.Globalization.DateTimeFormatInfo.CurrentInfo;
+    var currentMonth = DateTime.Today.Month;
+    var currentYear = DateTime.Today.Year;
 }
 
+@* ── Rental Requests Excel Report Section ─────────────────────────────── *@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card iocl-card shadow-sm border-0" style="border-left: 4px solid #ff6a00 !important;">
+            <div class="card-header text-white fw-bold d-flex align-items-center gap-2"
+                 style="background: linear-gradient(135deg, #1a3a6b 0%, #0d2545 100%);">
+                <i class="bi bi-file-earmark-excel-fill fs-5 text-success"></i>
+                <span>Generate Rental Requests Report (Excel)</span>
+                <span class="ms-2 badge bg-success">New</span>
+            </div>
+            <div class="card-body p-4">
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                <p class="text-muted mb-3">
+                    Select a <strong>Month</strong> and <strong>Year</strong> to download a complete Excel (.xlsx) report
+                    of all Rental Requests submitted in that period — including all approval details.
+                </p>
+                <form id="rentalReportForm" method="get" asp-action="ExportRentalRequests">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label iocl-form-label fw-semibold">
+                                <i class="bi bi-calendar3 me-1"></i> Select Month
+                            </label>
+                            <select name="selectedMonth" id="rentalMonth" class="form-select iocl-form-control">
+                                @for (int m = 1; m <= 12; m++)
+                                {
+                                    if (m == currentMonth)
+                                    {
+                                        <option value="@m" selected>@months.GetMonthName(m)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@m">@months.GetMonthName(m)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label iocl-form-label fw-semibold">
+                                <i class="bi bi-calendar-range me-1"></i> Select Year
+                            </label>
+                            <select name="selectedYear" id="rentalYear" class="form-select iocl-form-control">
+                                @for (int y = DateTime.Today.Year; y >= 2022; y--)
+                                {
+                                    if (y == currentYear)
+                                    {
+                                        <option value="@y" selected>@y</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@y">@y</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-success px-4 py-2 fw-semibold shadow-sm" id="btnGenerateRentalReport">
+                                <i class="bi bi-download me-2"></i>Generate &amp; Download Report
+                            </button>
+                        </div>
+                        <div class="col-md-3 text-muted small d-flex align-items-center">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Downloads as <code>RentalRequests_[Month]_[Year].xlsx</code>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* ── Analytics Report Section ─────────────────────────────────────────── *@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card iocl-card shadow-sm">
@@ -70,6 +151,7 @@
         </div>
     </div>
 </div>
+
 
 @if (Model != null)
 {

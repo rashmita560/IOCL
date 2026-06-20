@@ -19,7 +19,26 @@
             hodUser = DbContext.Users.FirstOrDefault(u => 
                 DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hodRole.Id));
         }
-        return hodUser != null ? $"{hodUser.FullName} - {hodUser.EmployeeId}" : "";
+        if (hodUser == null) return "";
+        return hodUser.EmployeeId;
+    }
+
+    string GetGMDisplayName()
+    {
+        var gmRole = DbContext.Roles.FirstOrDefault(r => r.Name == "GM");
+        if (gmRole == null) return "20000001";
+        var gmUser = DbContext.Users.FirstOrDefault(u => 
+            DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == gmRole.Id));
+        return gmUser?.EmployeeId ?? "20000001";
+    }
+
+    string GetHRDisplayName()
+    {
+        var hrRole = DbContext.Roles.FirstOrDefault(r => r.Name == "SuperAdmin");
+        if (hrRole == null) return "00000001";
+        var hrUser = DbContext.Users.FirstOrDefault(u => 
+            DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hrRole.Id));
+        return hrUser?.EmployeeId ?? "00000001";
     }
 
     string GetUserDisplayNameByEmpId(string empId)
@@ -27,7 +46,20 @@
         if (string.IsNullOrEmpty(empId)) return "";
         if (empId == "SYSTEM") return "SYSTEM";
         var user = DbContext.Users.FirstOrDefault(u => u.EmployeeId == empId || u.UserName == empId);
-        return user != null ? $"{user.FullName} - {user.EmployeeId}" : empId;
+        if (user != null)
+        {
+            var roles = DbContext.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).ToList();
+            var roleNames = DbContext.Roles.Where(r => roles.Contains(r.Id)).Select(r => r.Name).ToList();
+            var designation = "Employee";
+            if (roleNames.Contains("SuperAdmin")) designation = "HR";
+            else if (roleNames.Contains("GM")) designation = "GM";
+            else if (roleNames.Contains("HOD")) designation = "HOD";
+            return $"{designation} - {user.EmployeeId}";
+        }
+        if (empId.StartsWith("3")) return $"HOD - {empId}";
+        if (empId.StartsWith("2")) return $"GM - {empId}";
+        if (empId.StartsWith("0")) return $"HR - {empId}";
+        return $"Employee - {empId}";
     }
 
     // Determine if the current user can approve at the current stage
@@ -54,14 +86,14 @@
         <div class="card iocl-card shadow-sm mb-4">
             <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>Rental Request #@Model.RequestNumber</span>
-                <span class="badge @(Model.Status == RequestStatus.Pending ? "badge-pending" : Model.Status == RequestStatus.Approved ? "badge-approved" : "badge-rejected") iocl-badge">
+                <span class="badge @(Model.Status == RequestStatus.Pending ? "badge-pending" : Model.Status == RequestStatus.Approved ? "badge-approved" : Model.Status == RequestStatus.Cancelled ? "bg-secondary text-white" : "badge-rejected") iocl-badge">
                     @(Model.Status == RequestStatus.Pending ? 
                       (Model.ApprovalStage == ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(Model.User?.Department)})" : 
-                       Model.ApprovalStage == ApprovalStage.PendingGM ? "Pending to GM" : 
-                       Model.ApprovalStage == ApprovalStage.PendingHR ? "Pending to HR" : "Pending") : 
+                       Model.ApprovalStage == ApprovalStage.PendingGM ? $"Pending to GM ({GetGMDisplayName()})" : 
+                       Model.ApprovalStage == ApprovalStage.PendingHR ? $"Pending to HR ({GetHRDisplayName()})" : "Pending") : 
                       (Model.Status == RequestStatus.Rejected ? 
                        (string.IsNullOrEmpty(Model.ReviewedByEmployeeId) ? "Rejected" : $"Rejected by {GetUserDisplayNameByEmpId(Model.ReviewedByEmployeeId)}") : 
-                       Model.Status.ToString()))
+                       Model.Status == RequestStatus.Cancelled ? "Cancelled" : Model.Status.ToString()))
                 </span>
             </div>
             <div class="card-body p-4">
@@ -106,7 +138,7 @@
                                 @if (!string.IsNullOrEmpty(Model.HODApprovedByEmployeeId))
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.HODApprovedAt?.ToString("dd MMM yyyy HH:mm")">
-                                        <i class="bi bi-check-circle-fill me-1"></i>HOD: @GetUserDisplayNameByEmpId(Model.HODApprovedByEmployeeId)
+                                        <i class="bi bi-check-circle-fill me-1"></i>HOD: @Model.HODApprovedByEmployeeId
                                     </span>
                                 }
                                 else if (Model.ApprovalStage == ApprovalStage.PendingHOD && Model.Status == RequestStatus.Pending)
@@ -133,13 +165,13 @@
                                 @if (!string.IsNullOrEmpty(Model.GMApprovedByEmployeeId))
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.GMApprovedAt?.ToString("dd MMM yyyy HH:mm")">
-                                        <i class="bi bi-check-circle-fill me-1"></i>GM: @GetUserDisplayNameByEmpId(Model.GMApprovedByEmployeeId)
+                                        <i class="bi bi-check-circle-fill me-1"></i>GM: @Model.GMApprovedByEmployeeId
                                     </span>
                                 }
                                 else if (Model.ApprovalStage == ApprovalStage.PendingGM && Model.Status == RequestStatus.Pending)
                                 {
                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">
-                                        <i class="bi bi-hourglass-split me-1"></i>GM: Pending
+                                        <i class="bi bi-hourglass-split me-1"></i>GM: Pending (Emp: @GetGMDisplayName())
                                     </span>
                                 }
                                 else if (Model.ApprovalStage == ApprovalStage.PendingHOD)
@@ -168,7 +200,7 @@
                                 @if (!string.IsNullOrEmpty(Model.HRApprovedByEmployeeId))
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.HRApprovedAt?.ToString("dd MMM yyyy HH:mm")">
-                                        <i class="bi bi-check-circle-fill me-1"></i>HR: @GetUserDisplayNameByEmpId(Model.HRApprovedByEmployeeId)
+                                        <i class="bi bi-check-circle-fill me-1"></i>HR: @Model.HRApprovedByEmployeeId
                                     </span>
                                 }
                                 else if (Model.Status == RequestStatus.Rejected)
@@ -180,7 +212,7 @@
                                 else if (Model.ApprovalStage == ApprovalStage.PendingHR && Model.Status == RequestStatus.Pending)
                                 {
                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">
-                                        <i class="bi bi-hourglass-split me-1"></i>HR: Pending
+                                        <i class="bi bi-hourglass-split me-1"></i>HR: Pending (Emp: @GetHRDisplayName())
                                     </span>
                                 }
                                 else

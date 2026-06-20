@@ -261,6 +261,33 @@ Namespace Controllers
             Dim data = Await _reportService.ExportToExcelAsync(vm)
             Return File(data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"IOCL_Report_{DateTime.Now:yyyyMMdd}.xlsx")
         End Function
+
+        ''' <summary>
+        ''' Downloads an Excel report of all RentalRequests for the selected month and year.
+        ''' </summary>
+        <HttpGet>
+        Public Async Function ExportRentalRequests(selectedMonth As Integer, selectedYear As Integer) As Task(Of IActionResult)
+            ' Validation
+            If selectedMonth < 1 OrElse selectedMonth > 12 Then
+                TempData("Error") = "Please select a valid month."
+                Return RedirectToAction("Index")
+            End If
+            If selectedYear < 2022 OrElse selectedYear > DateTime.Today.Year + 1 Then
+                TempData("Error") = "Please select a valid year."
+                Return RedirectToAction("Index")
+            End If
+
+            Dim data = Await _reportService.ExportRentalRequestsExcelAsync(selectedMonth, selectedYear)
+
+            If data Is Nothing OrElse data.Length = 0 Then
+                TempData("Error") = "No rental requests found for the selected period."
+                Return RedirectToAction("Index")
+            End If
+
+            Dim monthName = New DateTime(selectedYear, selectedMonth, 1).ToString("MMMM")
+            Dim fileName = $"RentalRequests_{monthName}_{selectedYear}.xlsx"
+            Return File(data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName)
+        End Function
     End Class
 
     <Authorize(Roles:="SuperAdmin")>

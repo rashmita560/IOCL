@@ -14,7 +14,26 @@
             hodUser = DbContext.Users.FirstOrDefault(u => 
                 DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hodRole.Id));
         }
-        return hodUser != null ? $"{hodUser.FullName} - {hodUser.EmployeeId}" : "";
+        if (hodUser == null) return "";
+        return hodUser.EmployeeId;
+    }
+
+    string GetGMDisplayName()
+    {
+        var gmRole = DbContext.Roles.FirstOrDefault(r => r.Name == "GM");
+        if (gmRole == null) return "20000001";
+        var gmUser = DbContext.Users.FirstOrDefault(u => 
+            DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == gmRole.Id));
+        return gmUser?.EmployeeId ?? "20000001";
+    }
+
+    string GetHRDisplayName()
+    {
+        var hrRole = DbContext.Roles.FirstOrDefault(r => r.Name == "SuperAdmin");
+        if (hrRole == null) return "00000001";
+        var hrUser = DbContext.Users.FirstOrDefault(u => 
+            DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hrRole.Id));
+        return hrUser?.EmployeeId ?? "00000001";
     }
 
     string GetUserDisplayNameByEmpId(string empId)
@@ -22,7 +41,20 @@
         if (string.IsNullOrEmpty(empId)) return "";
         if (empId == "SYSTEM") return "SYSTEM";
         var user = DbContext.Users.FirstOrDefault(u => u.EmployeeId == empId || u.UserName == empId);
-        return user != null ? $"{user.FullName} - {user.EmployeeId}" : empId;
+        if (user != null)
+        {
+            var roles = DbContext.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).ToList();
+            var roleNames = DbContext.Roles.Where(r => roles.Contains(r.Id)).Select(r => r.Name).ToList();
+            var designation = "Employee";
+            if (roleNames.Contains("SuperAdmin")) designation = "HR";
+            else if (roleNames.Contains("GM")) designation = "GM";
+            else if (roleNames.Contains("HOD")) designation = "HOD";
+            return $"{designation} - {user.EmployeeId}";
+        }
+        if (empId.StartsWith("3")) return $"HOD - {empId}";
+        if (empId.StartsWith("2")) return $"GM - {empId}";
+        if (empId.StartsWith("0")) return $"HR - {empId}";
+        return $"Employee - {empId}";
     }
 }
 
@@ -58,29 +90,32 @@
                                         <td>@req.StartDate.ToString("dd MMM yyyy")</td>
                                         <td>@req.EndDate.ToString("dd MMM yyyy")</td>
                                         <td class="fw-bold">₹@req.GrandTotal</td>
-                                        <td>
-                                            @if (req.Status == RequestStatus.Pending)
+                                        <td>                                            @if (req.Status == RequestStatus.Pending)
                                             {
                                                 <span class="badge badge-pending iocl-badge">
                                                     @(req.ApprovalStage == ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(req.User?.Department)})" : 
-                                                      req.ApprovalStage == ApprovalStage.PendingGM ? "Pending to GM" : 
-                                                      req.ApprovalStage == ApprovalStage.PendingHR ? "Pending to HR" : "Pending")
+                                                      req.ApprovalStage == ApprovalStage.PendingGM ? $"Pending to GM ({GetGMDisplayName()})" : 
+                                                      req.ApprovalStage == ApprovalStage.PendingHR ? $"Pending to HR ({GetHRDisplayName()})" : "Pending")
                                                 </span>
                                             }
                                             else if (req.Status == RequestStatus.Approved)
                                             {
                                                 <span class="badge badge-approved iocl-badge">Approved</span>
                                             }
+                                            else if (req.Status == RequestStatus.Cancelled)
+                                            {
+                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                            }
                                             else
                                             {
                                                 <span class="badge badge-rejected iocl-badge" data-bs-toggle="tooltip" title="@req.RejectionReason">
                                                     @(string.IsNullOrEmpty(req.ReviewedByEmployeeId) ? "Rejected" : $"Rejected by {GetUserDisplayNameByEmpId(req.ReviewedByEmployeeId)}")
                                                 </span>
-                                                @if (!string.IsNullOrEmpty(req.RejectionReason))
+                                            }      @if (!string.IsNullOrEmpty(req.RejectionReason))
                                                 {
                                                     <div class="small text-danger" style="font-size: 0.75rem; max-width: 150px;">Reason: @req.RejectionReason</div>
                                                 }
-                                            }
+                                            
                                         </td>
                                         <td class="text-muted small">@req.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
                                         <td class="text-end pe-4">
@@ -129,13 +164,17 @@
                                 {
                                     <span class="badge badge-pending iocl-badge">
                                         @(req.ApprovalStage == ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(req.User?.Department)})" : 
-                                          req.ApprovalStage == ApprovalStage.PendingGM ? "Pending to GM" : 
-                                          req.ApprovalStage == ApprovalStage.PendingHR ? "Pending to HR" : "Pending")
+                                          req.ApprovalStage == ApprovalStage.PendingGM ? $"Pending to GM ({GetGMDisplayName()})" : 
+                                          req.ApprovalStage == ApprovalStage.PendingHR ? $"Pending to HR ({GetHRDisplayName()})" : "Pending")
                                     </span>
                                 }
                                 else if (req.Status == RequestStatus.Approved)
                                 {
                                     <span class="badge badge-approved iocl-badge">Approved</span>
+                                }
+                                else if (req.Status == RequestStatus.Cancelled)
+                                {
+                                    <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
                                 }
                                 else
                                 {

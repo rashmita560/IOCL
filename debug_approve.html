@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Request Details – IOCL Community Hall Management</title>
+    <meta name="description" content="IOCL Panipat Refinery Township Community Hall Rental Management System" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="/css/iocl.css?v=MJWsYRWy4afl_GUXNQlvDthxnWtfjUH7x7uoQPro_8o" rel="stylesheet" />
+</head>
+<body class="iocl-layout">
+
+    <!-- ═══════════════════════════════ TOP HEADER ═══════════════════════════════ -->
+    <header class="iocl-header bg-white shadow-sm py-2 px-4 d-flex justify-content-between align-items-center">
+        <!-- Logo -->
+        <div class="iocl-brand d-flex align-items-center gap-2">
+            <a href="/" class="iocl-logo-link">
+                <img src="https://iocl.com/assets/images/logo.gif" alt="IOCL Logo" style="height: 48px; object-fit: contain;" onerror="this.src='/images/iocl-logo.png'" />
+            </a>
+            <div class="iocl-app-title ms-2">
+                <div class="iocl-org-name font-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.8px; font-weight: 700; color: #003399;">Indian Oil Corporation Limited</div>
+                <div class="iocl-portal-name font-black text-dark" style="font-size: 1.05rem; font-weight: 800; color: #1e293b; letter-spacing: -0.2px;">Community Hall & Inventory Portal</div>
+            </div>
+        </div>
+
+        <!-- Right: Social, Notification, Profile -->
+        <div class="iocl-header-controls d-flex align-items-center gap-3">
+            <!-- Social Media Icons -->
+            <div class="social-icons d-none d-lg-flex gap-1 me-3">
+                <a href="https://facebook.com" target="_blank" class="social-icon facebook"><i class="bi bi-facebook"></i></a>
+                <a href="https://twitter.com" target="_blank" class="social-icon twitter"><i class="bi bi-twitter-x"></i></a>
+                <a href="https://youtube.com" target="_blank" class="social-icon youtube"><i class="bi bi-youtube"></i></a>
+                <a href="https://instagram.com" target="_blank" class="social-icon instagram"><i class="bi bi-instagram"></i></a>
+                <a href="https://linkedin.com" target="_blank" class="social-icon linkedin"><i class="bi bi-linkedin"></i></a>
+            </div>
+
+            <!-- Notification Bell -->
+            <div class="dropdown">
+                <button class="btn iocl-icon-btn position-relative" data-bs-toggle="dropdown" id="notifBellBtn" style="border: 1px solid #e2e8f0; border-radius: 50%; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; background-color: #f8fafc; color: #64748b; padding: 0;">
+                    <i class="bi bi-bell-fill"></i>
+                        <span class="notification-badge" style="position: absolute; top: -3px; right: -3px; background: linear-gradient(135deg, #FF6600, #FF8C42); color: #FFFFFF; font-size: 0.62rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 10px; border: 2px solid #FFFFFF;">8</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end notif-dropdown" style="min-width:320px">
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                        <strong>Notifications</strong>
+                        <a class="btn btn-sm btn-link text-decoration-none" href="/Notification/MarkAllRead">Mark all read</a>
+                    </div>
+                    
+<div class="notif-list-container" id="headerNotifContainer">
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Rental Request &#x2014; Awaiting Your Approval</span>
+                    <span class="notif-time text-muted">19-06-2026 06:35</span>
+                </div>
+                <div class="notif-msg text-muted small">Request #IOCL-REQ-2026-0031 has been approved by HOD (Rashi Singh) and now requires your review.</div>
+                    <div class="mt-1">
+                        <a href="/AdminRequest/Details/31" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="137">View Details</a>
+                    </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Rental Request &#x2014; Awaiting Your Approval</span>
+                    <span class="notif-time text-muted">19-06-2026 06:35</span>
+                </div>
+                <div class="notif-msg text-muted small">Request #IOCL-REQ-2026-0030 has been approved by HOD (Rashi Singh) and now requires your review.</div>
+                    <div class="mt-1">
+                        <a href="/AdminRequest/Details/30" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="135">View Details</a>
+                    </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Rental Request &#x2014; Awaiting Your Approval</span>
+                    <span class="notif-time text-muted">19-06-2026 04:52</span>
+                </div>
+                <div class="notif-msg text-muted small">Request #IOCL-REQ-2026-0029 has been approved by HOD (Rashi Singh) and now requires your review.</div>
+                    <div class="mt-1">
+                        <a href="/AdminRequest/Details/29" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="126">View Details</a>
+                    </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Rental Request &#x2014; Awaiting Your Approval</span>
+                    <span class="notif-time text-muted">19-06-2026 04:52</span>
+                </div>
+                <div class="notif-msg text-muted small">Request #IOCL-REQ-2026-0028 has been approved by HOD (Rashi Singh) and now requires your review.</div>
+                    <div class="mt-1">
+                        <a href="/AdminRequest/Details/28" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="124">View Details</a>
+                    </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">Rental Request &#x2014; Awaiting Your Approval</span>
+                    <span class="notif-time text-muted">18-06-2026 19:27</span>
+                </div>
+                <div class="notif-msg text-muted small">Request #IOCL-REQ-2026-0027 has been approved by HOD (Rashi Singh) and now requires your review.</div>
+                    <div class="mt-1">
+                        <a href="/AdminRequest/Details/27" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="114">View Details</a>
+                    </div>
+            </div>
+</div>
+
+                    <div class="text-center py-2 border-top">
+                        <a class="btn btn-sm text-primary text-decoration-none fw-bold" href="/Notification">View All</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Dropdown -->
+            <div class="dropdown">
+                <button class="btn dropdown-toggle border-0 p-0 bg-transparent d-flex align-items-center gap-2" data-bs-toggle="dropdown" style="color: inherit; box-shadow: none;">
+                    <div class="text-end d-none d-md-block" style="line-height: 1.25;">
+                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">Super Administrator</div>
+                        <div class="text-muted text-uppercase" style="font-size: 0.68rem; font-weight: 600; letter-spacing: 0.3px;">Super Admin</div>
+                    </div>
+                    <div class="iocl-avatar" style="background-color: #0c1b3e; color: #FFFFFF; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; border: 2px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        S
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><h6 class="dropdown-header">sysadmin@iocl.co.in</h6></li>
+                    <li><span class="dropdown-item-text text-muted small">IT Administration</span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="/Account/ChangePassword">
+                            <i class="bi bi-shield-lock me-2"></i>Change Password
+                        </a>
+                    </li>
+                    <li>
+                        <form method="post" action="/Account/Logout">
+                            <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                            </button>
+                        <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCpr8ejAzEVgtQn-xHUKW4P2LJYC8HOwqaT0HlGmatPcOZ5xkGssJiNShtNU9cw1w-QhinoX01036LJ7c9cA1fJk5FHzJci3wuuuFVYiBlRC8MABEu_bzrkEVJQPQmtvvOY6Nts6HJYbAgl4NOJcwlwJFXHlvx8XPM2cvVTM0kLuSg" /></form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════ TOP NAVIGATION BAR ═══════════════════════════════ -->
+    <nav class="navbar navbar-expand-lg navbar-dark iocl-navbar">
+        <div class="container-fluid">
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#ioclNavbarContent" aria-controls="ioclNavbarContent" aria-expanded="false" aria-label="Toggle navigation" style="padding: 0.25rem 0.5rem;">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="ioclNavbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link px-3 py-2 text-white " href="/AdminDashboard">
+                                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle px-3 py-2 text-white active-link" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-file-earmark-text me-1"></i>Bookings
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/AdminRequest"><i class="bi bi-card-list me-2"></i>Rental Requests</a></li>
+                                <li><a class="dropdown-item" href="/AdminRequest/HallBookings"><i class="bi bi-building me-2"></i>Hall Bookings</a></li>
+                                <li><a class="dropdown-item" href="/AdminRequest/Calendar"><i class="bi bi-calendar3-range me-2"></i>Hall Calendar</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle px-3 py-2 text-white " href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-boxes me-1"></i>Inventory
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/Inventory"><i class="bi bi-box me-2"></i>Inventory Items</a></li>
+                                <li><a class="dropdown-item" href="/Price"><i class="bi bi-currency-rupee me-2"></i>Price Management</a></li>
+                                <li><a class="dropdown-item" href="/Price/History"><i class="bi bi-clock-history me-2"></i>Price History</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle px-3 py-2 text-white " href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-bar-chart-line me-1"></i>Analytics
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/Reports"><i class="bi bi-graph-up me-2"></i>Reports &amp; Analytics</a></li>
+                                <li><a class="dropdown-item" href="/Audit"><i class="bi bi-journal-text me-2"></i>Audit Logs</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle px-3 py-2 text-white " href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-shield-lock me-1"></i>Super Admin
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/SuperAdmin/Users"><i class="bi bi-people me-2"></i>User Accounts</a></li>
+                                <li><a class="dropdown-item" href="/Facility"><i class="bi bi-buildings me-2"></i>Facility Management</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle px-3 py-2 text-white " href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-cart-plus me-1"></i>My Rentals
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/RentalRequest/Create"><i class="bi bi-plus-circle me-2"></i>New Rental Request</a></li>
+                                <li><a class="dropdown-item" href="/RentalRequest/MyRequests"><i class="bi bi-card-list me-2"></i>My Requests</a></li>
+                            </ul>
+                        </li>
+                </ul>
+                
+                <div class="d-none d-lg-flex align-items-center gap-3">
+                    <span class="text-uppercase fw-bold" style="color: #FF8C42; font-size: 0.85rem; letter-spacing: 1px;">PANIPAT REFINERY</span>
+                    <form method="post" class="m-0" action="/Account/Logout">
+                        <button type="submit" class="btn btn-link px-3 py-1 text-white text-decoration-none d-flex align-items-center gap-1 nav-exit-btn" style="font-size: 0.9rem; font-weight: 600;">
+                            <i class="bi bi-box-arrow-right"></i>Exit
+                        </button>
+                    <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCpr8ejAzEVgtQn-xHUKW4P2LJYC8HOwqaT0HlGmatPcOZ5xkGssJiNShtNU9cw1w-QhinoX01036LJ7c9cA1fJk5FHzJci3wuuuFVYiBlRC8MABEu_bzrkEVJQPQmtvvOY6Nts6HJYbAgl4NOJcwlwJFXHlvx8XPM2cvVTM0kLuSg" /></form>
+                </div>
+                
+                <!-- Mobile Exit/Refinery -->
+                <div class="d-lg-none mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="text-uppercase fw-bold" style="color: #FF8C42; font-size: 0.85rem; letter-spacing: 1px;">PANIPAT REFINERY</span>
+                    <form method="post" class="m-0" action="/Account/Logout">
+                        <button type="submit" class="btn btn-danger btn-sm px-3 fw-bold d-flex align-items-center gap-1">
+                            <i class="bi bi-box-arrow-right"></i>Exit
+                        </button>
+                    <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCpr8ejAzEVgtQn-xHUKW4P2LJYC8HOwqaT0HlGmatPcOZ5xkGssJiNShtNU9cw1w-QhinoX01036LJ7c9cA1fJk5FHzJci3wuuuFVYiBlRC8MABEu_bzrkEVJQPQmtvvOY6Nts6HJYbAgl4NOJcwlwJFXHlvx8XPM2cvVTM0kLuSg" /></form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="iocl-page-wrapper">
+
+        <!-- ═══════════════════════════════ MAIN CONTENT ════════════════════════ -->
+        <main class="iocl-main-content">
+            <!-- Breadcrumb / Page Title -->
+
+            <!-- Toast Alerts -->
+                <div class="alert alert-danger alert-dismissible iocl-alert fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Approval cannot be completed. Requested inventory is no longer available for the selected date range.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+            
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Main request details -->
+        <div class="card iocl-card shadow-sm mb-4">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>Rental Request #IOCL-REQ-2026-0029</span>
+                <span class="badge badge-pending iocl-badge">
+                    Pending
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row mb-4 pb-3 border-bottom">
+                    <div class="col-md-6">
+                        <div class="text-muted small">REQUESTER DETAILS</div>
+                        <h5 class="fw-bold text-dark mb-1">Ramesh Kumar</h5>
+                        <div class="text-muted small">Emp ID: 12345678 | Dept: Refinery Operations</div>
+                        <div class="text-muted small">Quarter: Block C, Quarter 305</div>
+                        <div class="mt-1">
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:0.75rem;">
+                                Submitted as: User
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="text-muted small">RENTAL DETAILS</div>
+                        <div class="text-muted small">Event Date: 20 Jun 2026</div>
+                        <div class="text-muted small">Rental Period: 20-06-2026 to 21-06-2026</div>
+                    </div>
+                </div>
+
+
+                <!-- Approval Trail -->
+                <div class="mb-4 p-3 rounded border" style="background:#f8f9ff;">
+                    <div class="text-muted small fw-bold mb-3"><i class="bi bi-diagram-3 me-1 text-primary"></i>APPROVAL TRAIL</div>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+
+                            <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="19 Jun 2026 04:52">
+                                        <i class="bi bi-check-circle-fill me-1"></i>HOD: Rashi Singh
+                                    </span>
+                                <i class="bi bi-chevron-right text-muted"></i>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">
+                                        <i class="bi bi-hourglass-split me-1"></i>HR: Pending Final
+                                    </span>
+                            </div>
+                    </div>
+                    <div class="mt-2 text-muted" style="font-size:0.78rem;">
+                        Current Stage: <strong>Pending HR</strong>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-box-seam me-2 text-primary"></i>Requested Items</h5>
+
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Item Name</th>
+                            <th class="text-end">Daily Rate</th>
+                            <th class="text-center">Requested Qty</th>
+                            <th class="text-end">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            <tr>
+                                <td class="fw-bold">LED Light String (10m)</td>
+                                <td class="text-end">₹50</td>
+                                <td class="text-center">50</td>
+                                <td class="text-end fw-bold">₹2500.00</td>
+                            </tr>
+                    </tbody>
+                </table>
+
+                <div class="text-end mt-4">
+                    <h4 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹2500</span></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Administrative Actions Sidebar -->
+    <div class="col-lg-4">
+        <div class="card iocl-card shadow-sm border-0 bg-white p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-gear-wide-connected text-primary me-2"></i>
+HR Final Decision            </h5>
+
+
+                    <div class="alert alert-warning small mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Stock Warning:</strong> One or more requested items have insufficient quantity. Approving may partially allocate.
+                    </div>
+                <div class="d-grid gap-2">
+                    <!-- Approve Action -->
+                    <form method="post" onsubmit="return confirm('Approve this request and advance to next stage?');" action="/AdminRequest/Approve/29">
+                        
+                        <button type="submit" class="btn btn-success w-100 py-2">
+                            <i class="bi bi-check-circle-fill me-2"></i>Approve &amp; Advance
+                        </button>
+                    <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCpr8ejAzEVgtQn-xHUKW4P2LJYC8HOwqaT0HlGmatPcOZ5xkGssJiNShtNU9cw1w-QhinoX01036LJ7c9cA1fJk5FHzJci3wuuuFVYiBlRC8MABEu_bzrkEVJQPQmtvvOY6Nts6HJYbAgl4NOJcwlwJFXHlvx8XPM2cvVTM0kLuSg" /></form>
+
+                    <!-- Reject Action Modal Trigger -->
+                    <button type="button" class="btn btn-danger w-100 py-2" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle-fill me-2"></i>Reject Request
+                    </button>
+                </div>
+
+
+            <hr class="my-4" />
+            <a class="btn btn-light border w-100" href="/AdminRequest">Back to Requests List</a>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Reason Dialog Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="/AdminRequest/Reject/29">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-x-circle-fill text-danger me-2"></i>Reject Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="rejectionReason" class="form-label iocl-form-label">Reason for Rejection</label>
+                        <textarea class="form-control iocl-form-control" name="reason" id="rejectionReason" rows="4" placeholder="e.g. Insufficient stock, budget exceeded, missing documents..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Submit Rejection</button>
+                </div>
+            <input name="__RequestVerificationToken" type="hidden" value="CfDJ8DTtokzYgaVFhI9bfpN5PCpr8ejAzEVgtQn-xHUKW4P2LJYC8HOwqaT0HlGmatPcOZ5xkGssJiNShtNU9cw1w-QhinoX01036LJ7c9cA1fJk5FHzJci3wuuuFVYiBlRC8MABEu_bzrkEVJQPQmtvvOY6Nts6HJYbAgl4NOJcwlwJFXHlvx8XPM2cvVTM0kLuSg" /></form>
+        </div>
+    </div>
+</div>
+
+        </main>
+    </div>
+
+    <!-- ═══════════════════════════════ FOOTER ══════════════════════════════════ -->
+    <footer class="iocl-footer">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <span>Developed for <strong>IOCL Panipat Refinery Township</strong></span>
+                </div>
+                <div class="col-md-6 text-center text-md-end text-muted small">
+                    &copy; 2026 Indian Oil Corporation Limited. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/js/iocl.js?v=pyAeQaN8GurbBanwSRxNDauQG73JR8ZbIDbepWmQCDA"></script>
+    
+</body>
+</html>

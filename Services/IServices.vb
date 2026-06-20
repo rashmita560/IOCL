@@ -36,6 +36,8 @@ Namespace Services
         Function GenerateReportAsync(vm As ReportViewModel) As Task(Of ReportViewModel)
         Function ExportToCsvAsync(vm As ReportViewModel) As Task(Of Byte())
         Function ExportToExcelAsync(vm As ReportViewModel) As Task(Of Byte())
+        ''' <summary>Export all RentalRequests for the specified month and year as an Excel (.xlsx) file.</summary>
+        Function ExportRentalRequestsExcelAsync(month As Integer, year As Integer) As Task(Of Byte())
     End Interface
 
     Public Interface IAuditService

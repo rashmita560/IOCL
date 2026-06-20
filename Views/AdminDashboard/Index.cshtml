@@ -14,7 +14,8 @@
             hodUser = DbContext.Users.FirstOrDefault(u => 
                 DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hodRole.Id));
         }
-        return hodUser != null ? $"{hodUser.FullName} - {hodUser.EmployeeId}" : "";
+        if (hodUser == null) return "";
+        return $"HOD - {hodUser.EmployeeId}";
     }
 
     string GetUserDisplayNameByEmpId(string empId)
@@ -22,7 +23,20 @@
         if (string.IsNullOrEmpty(empId)) return "";
         if (empId == "SYSTEM") return "SYSTEM";
         var user = DbContext.Users.FirstOrDefault(u => u.EmployeeId == empId || u.UserName == empId);
-        return user != null ? $"{user.FullName} - {user.EmployeeId}" : empId;
+        if (user != null)
+        {
+            var roles = DbContext.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).ToList();
+            var roleNames = DbContext.Roles.Where(r => roles.Contains(r.Id)).Select(r => r.Name).ToList();
+            var designation = "Employee";
+            if (roleNames.Contains("SuperAdmin")) designation = "HR";
+            else if (roleNames.Contains("GM")) designation = "GM";
+            else if (roleNames.Contains("HOD")) designation = "HOD";
+            return $"{designation} - {user.EmployeeId}";
+        }
+        if (empId.StartsWith("3")) return $"HOD - {empId}";
+        if (empId.StartsWith("2")) return $"GM - {empId}";
+        if (empId.StartsWith("0")) return $"HR - {empId}";
+        return $"Employee - {empId}";
     }
 }
 
@@ -193,13 +207,17 @@
                                             {
                                                 <span class="badge badge-pending iocl-badge">
                                                     @(req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(req.User?.Department)})" : 
-                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingGM ? "Pending to GM" : 
-                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHR ? "Pending to HR" : "Pending")
+                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingGM ? $"Pending to GM ({GetGMDisplayName()})" : 
+                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHR ? $"Pending to HR ({GetHRDisplayName()})" : "Pending")
                                                 </span>
                                             }
                                             else if (req.Status == RequestStatus.Approved)
                                             {
                                                 <span class="badge badge-approved iocl-badge">Approved</span>
+                                            }
+                                            else if (req.Status == RequestStatus.Cancelled)
+                                            {
+                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
                                             }
                                             else
                                             {
