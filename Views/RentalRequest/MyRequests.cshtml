@@ -171,8 +171,19 @@
                             <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹@req.GrandTotal</span></h5>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <div class="modal-footer justify-content-between">
+                        <div>
+                            @if (req.Status == RequestStatus.Pending || req.Status == RequestStatus.Approved)
+                            {
+                                <form method="post" onsubmit="return confirm('Are you sure you want to cancel this request? This will release any allocated stock.');" class="d-inline" asp-action="Cancel">
+                                    <input type="hidden" name="id" value="@req.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-x-circle me-1"></i>Cancel Request
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>

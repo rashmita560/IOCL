@@ -42,7 +42,6 @@ Namespace Models.Entities
 
         ' Navigation — transactional records
         Public Property RentalRequests As ICollection(Of RentalRequest) = New List(Of RentalRequest)()
-        Public Property HallBookings As ICollection(Of HallBooking) = New List(Of HallBooking)()
         Public Property Notifications As ICollection(Of Notification) = New List(Of Notification)()
         Public Property AuditLogs As ICollection(Of AuditLog) = New List(Of AuditLog)()
     End Class

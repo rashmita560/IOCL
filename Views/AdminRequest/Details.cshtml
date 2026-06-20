@@ -78,10 +78,10 @@
                         @if (Model.SubmittedByRole == "User")
                         {
                             <div class="d-flex align-items-center gap-2">
-                                @if (!string.IsNullOrEmpty(Model.HODApprovedBy))
+                                @if (!string.IsNullOrEmpty(Model.HODApprovedByEmployeeId))
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.HODApprovedAt?.ToString("dd MMM yyyy HH:mm")">
-                                        <i class="bi bi-check-circle-fill me-1"></i>HOD: @Model.HODApprovedBy
+                                        <i class="bi bi-check-circle-fill me-1"></i>HOD (Emp: @Model.HODApprovedByEmployeeId)
                                     </span>
                                 }
                                 else if (Model.ApprovalStage == ApprovalStage.PendingHOD && Model.Status == RequestStatus.Pending)
@@ -105,10 +105,10 @@
                              (Model.SubmittedByRole == "HOD" && Model.GrandTotal > 10000))
                         {
                             <div class="d-flex align-items-center gap-2">
-                                @if (!string.IsNullOrEmpty(Model.GMApprovedBy))
+                                @if (!string.IsNullOrEmpty(Model.GMApprovedByEmployeeId))
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.GMApprovedAt?.ToString("dd MMM yyyy HH:mm")">
-                                        <i class="bi bi-check-circle-fill me-1"></i>GM: @Model.GMApprovedBy
+                                        <i class="bi bi-check-circle-fill me-1"></i>GM (Emp: @Model.GMApprovedByEmployeeId)
                                     </span>
                                 }
                                 else if (Model.ApprovalStage == ApprovalStage.PendingGM && Model.Status == RequestStatus.Pending)
@@ -136,14 +136,14 @@
                             </div>
                         }
 
-                        @* HR Final Stage *@
+                        @* HR Stage *@
                         @if (Model.GrandTotal <= 10000 || Model.SubmittedByRole == "GM")
                         {
                             <div class="d-flex align-items-center">
-                                @if (Model.Status == RequestStatus.Approved)
+                                @if (!string.IsNullOrEmpty(Model.HRApprovedByEmployeeId))
                                 {
-                                    <span class="badge bg-success px-3 py-2">
-                                        <i class="bi bi-check-circle-fill me-1"></i>HR: Approved by @Model.ReviewedBy
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.HRApprovedAt?.ToString("dd MMM yyyy HH:mm")">
+                                        <i class="bi bi-check-circle-fill me-1"></i>HR (Emp: @Model.HRApprovedByEmployeeId)
                                     </span>
                                 }
                                 else if (Model.Status == RequestStatus.Rejected)
@@ -152,10 +152,10 @@
                                         <i class="bi bi-x-circle-fill me-1"></i>Rejected
                                     </span>
                                 }
-                                else if (Model.ApprovalStage == ApprovalStage.PendingHR)
+                                else if (Model.ApprovalStage == ApprovalStage.PendingHR && Model.Status == RequestStatus.Pending)
                                 {
                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">
-                                        <i class="bi bi-hourglass-split me-1"></i>HR: Pending Final
+                                        <i class="bi bi-hourglass-split me-1"></i>HR: Pending
                                     </span>
                                 }
                                 else
@@ -170,6 +170,18 @@
                     <div class="mt-2 text-muted" style="font-size:0.78rem;">
                         Current Stage: <strong>@stageLabel(Model.ApprovalStage)</strong>
                     </div>
+                    @if (Model.Status == RequestStatus.Approved && !string.IsNullOrEmpty(Model.ReviewedByEmployeeId))
+                    {
+                        <div class="mt-1 text-muted" style="font-size:0.78rem;">
+                            Final Approver: <strong>Employee ID @Model.ReviewedByEmployeeId</strong> (Approved At: @Model.ReviewedAt?.ToString("dd MMM yyyy HH:mm"))
+                        </div>
+                    }
+                    @if (Model.Status == RequestStatus.Rejected && !string.IsNullOrEmpty(Model.ReviewedByEmployeeId))
+                    {
+                        <div class="mt-1 text-muted" style="font-size:0.78rem;">
+                            Rejected By: <strong>Employee ID @Model.ReviewedByEmployeeId</strong> (Rejected At: @Model.ReviewedAt?.ToString("dd MMM yyyy HH:mm"))
+                        </div>
+                    }
                 </div>
 
                 <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-box-seam me-2 text-primary"></i>Requested Items</h5>

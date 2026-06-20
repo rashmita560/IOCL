@@ -55,10 +55,8 @@ Namespace Services
             vm.RejectedCount = requests.Where(Function(r) r.Status = RequestStatus.Rejected).Count
             vm.PendingCount = requests.Where(Function(r) r.Status = RequestStatus.Pending).Count
 
-            ' Hall bookings
-            vm.TotalHallBookings = Await _context.HallBookings.
-                Where(Function(b) b.CreatedAt >= startDate AndAlso b.CreatedAt <= endDate.AddDays(1)).
-                CountAsync()
+            ' Hall bookings (disabled)
+            vm.TotalHallBookings = 0
 
             ' Most used items
             vm.MostUsedItems = approvedRequests.
@@ -88,29 +86,8 @@ Namespace Services
                 ThenBy(Function(m) m.Month).
                 ToList()
 
-            ' Hall utilization
-            Dim hallBookings = Await _context.HallBookings.
-                Include(Function(b) b.BookingFacilities).ThenInclude(Function(bf) bf.Facility).
-                Where(Function(b) b.CreatedAt >= startDate AndAlso b.CreatedAt <= endDate.AddDays(1) AndAlso b.Status = BookingStatus.Approved).
-                ToListAsync()
-
-            ' Flatten to per-facility rows so each facility gets credited individually
-            Dim facilityRows = hallBookings.SelectMany(Function(b)
-                Return b.BookingFacilities.Select(Function(bf) New With {
-                    .FacilityName = If(bf.Facility?.Name, "Unknown"),
-                    .Amount = bf.RateAtBooking,
-                    .BookingId = b.Id
-                })
-            End Function).ToList()
-
-            vm.HallUtilization = facilityRows.
-                GroupBy(Function(r) r.FacilityName).
-                Select(Function(g) New HallUtilizationReport With {
-                    .HallName = g.Key,
-                    .TotalBookings = g.Select(Function(r) r.BookingId).Distinct().Count(),
-                    .TotalRevenue = g.Sum(Function(r) r.Amount)
-                }).
-                ToList()
+            ' Hall utilization (disabled)
+            vm.HallUtilization = New List(Of HallUtilizationReport)()
 
             Return vm
         End Function

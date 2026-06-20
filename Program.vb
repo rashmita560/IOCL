@@ -63,7 +63,6 @@ Module Program
         ' ─── Services ───────────────────────────────────────────────────────────
         builder.Services.AddScoped(Of IRentalService, RentalService)()
         builder.Services.AddScoped(Of IInventoryService, InventoryService)()
-        builder.Services.AddScoped(Of IHallBookingService, HallBookingService)()
         builder.Services.AddScoped(Of IReportService, ReportService)()
         builder.Services.AddScoped(Of IAuditService, AuditService)()
         builder.Services.AddScoped(Of INotificationService, NotificationService)()
@@ -76,6 +75,7 @@ Module Program
             Try
                 Dim context = services.GetRequiredService(Of ApplicationDbContext)()
                 context.Database.EnsureCreated()
+                ReconcileReservedQuantities(context)
                 SeedData.InitializeAsync(services).GetAwaiter().GetResult()
             Catch ex As Exception
                 Dim logger = services.GetRequiredService(Of ILoggerFactory)().CreateLogger("Program")
@@ -100,5 +100,22 @@ Module Program
             pattern:="{controller=Home}/{action=Index}/{id?}")
 
         app.Run()
+    End Sub
+
+    ''' <summary>
+    ''' Recalculates InventoryItem.ReservedQuantity for every active item from the
+    ''' InventoryAllocations table (single source of truth). Run once at startup
+    ''' so any DB divergence accumulated by earlier bugs is corrected immediately.
+    ''' </summary>
+    Private Sub ReconcileReservedQuantities(context As ApplicationDbContext)
+        Dim items = context.InventoryItems.Where(Function(i) i.IsActive).ToList()
+        For Each item In items
+            Dim reserved = context.InventoryAllocations.
+                Where(Function(a) a.InventoryItemId = item.Id AndAlso
+                                  (a.Status = "Approved" OrElse a.Status = "Reserved")).
+                Sum(Function(a) CType(a.AllocatedQuantity, Integer?))
+            item.ReservedQuantity = If(reserved, 0)
+        Next
+        context.SaveChanges()
     End Sub
 End Module

@@ -201,35 +201,6 @@ Namespace Data
                 Await userManager.AddToRoleAsync(user2, "User")
             End If
 
-            ' ── Facility Master (IOCL Township Bookable Venues) ────────────────────
-            If Not Await context.CommunityHalls.AnyAsync() Then
-                context.CommunityHalls.AddRange(
-                    New CommunityHall With {
-                        .Name = "Main Community Hall",
-                        .FacilityType = FacilityType.MainHall,
-                        .Description = "The primary multipurpose hall of IOCL Panipat Township, suitable for marriages, cultural programs, and large community gatherings.",
-                        .Location = "IOCL Township Community Centre",
-                        .Capacity = 500,
-                        .Facilities = "Air Conditioning, Professional Sound System, Stage & Podium, Projector & Screen, LED Lighting, Parking, Generator Backup",
-                        .RentalRatePerDay = 5000,
-                        .Status = HallStatus.Available,
-                        .IsActive = True,
-                        .DisplayOrder = 1
-                    },
-                    New CommunityHall With {
-                        .Name = "Dining Hall",
-                        .FacilityType = FacilityType.DiningHall,
-                        .Description = "Attached dining facility with seating and catering setup area. Can be booked alongside the Main Community Hall or independently.",
-                        .Location = "IOCL Township Community Centre (Adjacent to Main Hall)",
-                        .Capacity = 150,
-                        .Facilities = "Catering Setup Area, Serving Counter, Tables & Chairs, Exhaust Ventilation",
-                        .RentalRatePerDay = 2000,
-                        .Status = HallStatus.Available,
-                        .IsActive = True,
-                        .DisplayOrder = 2
-                    }
-                )
-            End If
 
             ' ── Inventory Categories ────────────────────────────────────────────────
             If Not Await context.InventoryCategories.AnyAsync() Then

@@ -37,7 +37,7 @@ Namespace Models.ViewModels
         Public Property GrandTotal As Decimal
         Public Property Status As RequestStatus
         Public Property CreatedAt As DateTime
-        Public Property ReviewedBy As String = String.Empty
+        Public Property ReviewedByEmployeeId As String = String.Empty
         Public Property RejectionReason As String = String.Empty
     End Class
 

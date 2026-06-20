@@ -205,7 +205,7 @@ Namespace Services
                 .ApprovalStage = initialStage,
                 .CreatedAt = DateTime.UtcNow,
                 .ReviewedAt = If(isAutoApprove, CType(DateTime.UtcNow, DateTime?), Nothing),
-                .ReviewedBy = If(isAutoApprove, $"Auto-Approved ({submitterRole})", Nothing)
+                .ReviewedByEmployeeId = If(isAutoApprove, "SYSTEM", String.Empty)
             }
 
             Await _requestRepo.AddAsync(request)
@@ -224,8 +224,8 @@ Namespace Services
                     Dim item = Await _inventoryRepo.GetByIdAsync(lineItem.InventoryItemId)
                     If item Is Nothing Then Continue For
 
-                    Dim available = item.TotalQuantity - item.ReservedQuantity
-                    Dim canAllocate = Math.Max(0, Math.Min(lineItem.RequestedQuantity, available))
+                    Dim available = Await GetAvailableQuantityForDatesAsync(lineItem.InventoryItemId, request.StartDate, request.EndDate, request.Id)
+                    Dim canAllocate = Math.Min(lineItem.RequestedQuantity, available)
                     lineItem.AllocatedQuantity = canAllocate
 
                     If canAllocate >= lineItem.RequestedQuantity Then
@@ -241,6 +241,18 @@ Namespace Services
                     If canAllocate > 0 Then
                         item.ReservedQuantity += canAllocate
                         item.UpdatedAt = DateTime.UtcNow
+
+                        Dim allocation = New InventoryAllocation With {
+                            .RequestId = request.Id,
+                            .InventoryItemId = item.Id,
+                            .AllocatedQuantity = canAllocate,
+                            .StartDate = request.StartDate,
+                            .EndDate = request.EndDate,
+                            .Status = "Approved",
+                            .AllocationDate = DateTime.UtcNow
+                        }
+                        Await _context.InventoryAllocations.AddAsync(allocation)
+
                         Await _context.InventoryTransactions.AddAsync(New InventoryTransaction With {
                             .InventoryItemId = item.Id,
                             .RentalRequestId = request.Id,
@@ -305,14 +317,18 @@ Namespace Services
             ' ── Record this stage's approval ──────────────────────────────────────
             Dim approverInfo As ApplicationUser = Await _userManager.FindByIdAsync(approverUser)
             Dim approverName = If(approverInfo?.FullName, approverUser)
+            Dim approverEmployeeId = If(approverInfo?.EmployeeId, If(approverInfo?.UserName, approverUser))
 
             Select Case request.ApprovalStage
                 Case ApprovalStage.PendingHOD
                     request.HODApprovedAt = DateTime.UtcNow
-                    request.HODApprovedBy = approverName
+                    request.HODApprovedByEmployeeId = approverEmployeeId
                 Case ApprovalStage.PendingGM
                     request.GMApprovedAt = DateTime.UtcNow
-                    request.GMApprovedBy = approverName
+                    request.GMApprovedByEmployeeId = approverEmployeeId
+                Case ApprovalStage.PendingHR
+                    request.HRApprovedAt = DateTime.UtcNow
+                    request.HRApprovedByEmployeeId = approverEmployeeId
             End Select
 
             ' ── Advance to Next Stage or Fully Approve ────────────────────────────
@@ -346,43 +362,39 @@ Namespace Services
 
                 Return (True, $"Stage approved by {approverRole}. Request forwarded to {nextRole} for next approval.")
             Else
-                ' ── Final Approval — Allocate Inventory (FCFS) ───────────────────
-                Dim allocationResults As New List(Of String)()
-                Dim anyFullyAllocated = False
+                ' ── Final Approval — Validate Stock First (Overlapping dates check) ──
+                For Each lineItem In request.RentalRequestItems
+                    Dim available = Await GetAvailableQuantityForDatesAsync(lineItem.InventoryItemId, request.StartDate, request.EndDate, request.Id)
+                    If lineItem.RequestedQuantity > available Then
+                        Return (False, "Requested inventory is no longer available for the selected date range")
+                    End If
+                Next
 
+                ' ── Final Approval — Allocate Inventory ──
                 For Each lineItem In request.RentalRequestItems
                     Dim item = Await _inventoryRepo.GetByIdAsync(lineItem.InventoryItemId)
                     If item Is Nothing Then Continue For
 
-                    Dim available = item.TotalQuantity - item.ReservedQuantity
-                    Dim earlierReservedForThisItem = Await _context.RentalRequestItems.
-                        Include(Function(ri) ri.RentalRequest).
-                        Where(Function(ri) ri.InventoryItemId = lineItem.InventoryItemId AndAlso
-                                            ri.RentalRequest.Status = RequestStatus.Pending AndAlso
-                                            ri.RentalRequest.CreatedAt < request.CreatedAt).
-                        SumAsync(Function(ri) CType(ri.RequestedQuantity, Integer?))
-
-                    Dim effectiveAvailable = available - If(earlierReservedForThisItem, 0)
-                    Dim canAllocate = Math.Max(0, Math.Min(lineItem.RequestedQuantity, effectiveAvailable))
+                    Dim available = Await GetAvailableQuantityForDatesAsync(lineItem.InventoryItemId, request.StartDate, request.EndDate, request.Id)
+                    Dim canAllocate = Math.Min(lineItem.RequestedQuantity, available)
 
                     lineItem.AllocatedQuantity = canAllocate
-
-                    If canAllocate >= lineItem.RequestedQuantity Then
-                        lineItem.Status = ItemRequestStatus.FullyAllocated
-                        anyFullyAllocated = True
-                    ElseIf canAllocate > 0 Then
-                        lineItem.Status = ItemRequestStatus.PartiallyAllocated
-                        lineItem.StatusReason = $"Only {canAllocate} of {lineItem.RequestedQuantity} available (FCFS)"
-                        anyFullyAllocated = True
-                    Else
-                        lineItem.Status = ItemRequestStatus.Rejected
-                        lineItem.StatusReason = $"No stock available — earlier requests have priority (FCFS)"
-                        allocationResults.Add($"{item.Name}: Insufficient stock")
-                    End If
+                    lineItem.Status = ItemRequestStatus.FullyAllocated
 
                     If canAllocate > 0 Then
                         item.ReservedQuantity += canAllocate
                         item.UpdatedAt = DateTime.UtcNow
+
+                        Dim allocation = New InventoryAllocation With {
+                            .RequestId = request.Id,
+                            .InventoryItemId = item.Id,
+                            .AllocatedQuantity = canAllocate,
+                            .StartDate = request.StartDate,
+                            .EndDate = request.EndDate,
+                            .Status = "Approved",
+                            .AllocationDate = DateTime.UtcNow
+                        }
+                        Await _context.InventoryAllocations.AddAsync(allocation)
 
                         Await _context.InventoryTransactions.AddAsync(New InventoryTransaction With {
                             .InventoryItemId = item.Id,
@@ -400,7 +412,7 @@ Namespace Services
                 request.Status = RequestStatus.Approved
                 request.ApprovalStage = ApprovalStage.Approved
                 request.ReviewedAt = DateTime.UtcNow
-                request.ReviewedBy = approverName
+                request.ReviewedByEmployeeId = approverEmployeeId
 
                 Await _context.SaveChangesAsync()
 
@@ -410,11 +422,7 @@ Namespace Services
                     NotificationType.Approved,
                     "/RentalRequest/MyRequests")
 
-                Dim message = If(allocationResults.Count > 0,
-                    $"Fully approved with partial allocation. Issues: {String.Join(", ", allocationResults)}",
-                    "Request fully approved and inventory allocated.")
-
-                Return (True, message)
+                Return (True, "Request fully approved and inventory allocated.")
             End If
         End Function
 
@@ -425,7 +433,7 @@ Namespace Services
             request.Status = RequestStatus.Rejected
             request.ApprovalStage = ApprovalStage.Rejected
             request.ReviewedAt = DateTime.UtcNow
-            request.ReviewedBy = adminUserName
+            request.ReviewedByEmployeeId = adminUserName
             request.RejectionReason = reason
 
             For Each lineItem In request.RentalRequestItems
@@ -454,6 +462,80 @@ Namespace Services
                 Await file.CopyToAsync(stream)
             End Using
             Return $"/uploads/documents/{fileName}"
+        End Function
+
+        Public Async Function CancelRequestAsync(requestId As Integer, userName As String) As Task(Of Boolean) Implements IRentalService.CancelRequestAsync
+            Dim request = Await _requestRepo.GetRequestWithItemsAsync(requestId)
+            If request Is Nothing Then Return False
+            If request.Status <> RequestStatus.Pending AndAlso request.Status <> RequestStatus.Approved Then Return False
+
+            If request.Status = RequestStatus.Approved Then
+                Dim allocations = Await _context.InventoryAllocations.
+                    Where(Function(a) a.RequestId = requestId).ToListAsync()
+
+                For Each alloc In allocations
+                    Dim item = Await _inventoryRepo.GetByIdAsync(alloc.InventoryItemId)
+                    If item IsNot Nothing Then
+                        item.ReservedQuantity = Math.Max(0, item.ReservedQuantity - alloc.AllocatedQuantity)
+                        item.UpdatedAt = DateTime.UtcNow
+
+                        Await _context.InventoryTransactions.AddAsync(New InventoryTransaction With {
+                            .InventoryItemId = item.Id,
+                            .RentalRequestId = requestId,
+                            .TransactionType = TransactionType.Release,
+                            .QuantityChanged = alloc.AllocatedQuantity,
+                            .QuantityBefore = item.ReservedQuantity + alloc.AllocatedQuantity,
+                            .QuantityAfter = item.ReservedQuantity,
+                            .Notes = $"Released allocation due to cancellation of request {request.RequestNumber}",
+                            .PerformedBy = userName
+                        })
+                    End If
+                    _context.InventoryAllocations.Remove(alloc)
+                Next
+            End If
+
+            request.Status = RequestStatus.Cancelled
+            request.ApprovalStage = ApprovalStage.Rejected
+            request.ReviewedAt = DateTime.UtcNow
+            request.ReviewedByEmployeeId = userName
+
+            Await _context.SaveChangesAsync()
+
+            Await _notificationService.SendNotificationAsync(request.UserId,
+                "Request Cancelled",
+                $"Your rental request #{request.RequestNumber} has been cancelled successfully.",
+                NotificationType.Rejected,
+                "/RentalRequest/MyRequests")
+
+            Return True
+        End Function
+
+        Private Async Function GetAvailableQuantityForDatesAsync(itemId As Integer, startDate As DateTime, endDate As DateTime, excludeRequestId As Integer) As Task(Of Integer)
+            Dim item = Await _context.InventoryItems.FindAsync(itemId)
+            If item Is Nothing Then Return 0
+
+            Dim maxReserved As Integer = 0
+            Dim currentDate = startDate.Date
+            Dim finalDate = endDate.Date
+            
+            While currentDate <= finalDate
+                Dim reservedOnDay = Await _context.InventoryAllocations.
+                    Where(Function(a) a.InventoryItemId = itemId AndAlso
+                                      a.RequestId <> excludeRequestId AndAlso
+                                      (a.Status = "Approved" OrElse a.Status = "Reserved") AndAlso
+                                      a.StartDate <= currentDate AndAlso
+                                      a.EndDate >= currentDate).
+                    SumAsync(Function(a) CType(a.AllocatedQuantity, Integer?))
+                
+                Dim dayReserved = If(reservedOnDay, 0)
+                If dayReserved > maxReserved Then
+                    maxReserved = dayReserved
+                End If
+                
+                currentDate = currentDate.AddDays(1)
+            End While
+
+            Return Math.Max(0, item.TotalQuantity - maxReserved)
         End Function
     End Class
 End Namespace

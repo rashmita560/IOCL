@@ -11,6 +11,7 @@ Namespace Services
         Function CreateRequestAsync(vm As RentalRequestViewModel, userId As String, submitterRole As String) As Task(Of RentalRequest)
         Function ApproveRequestAsync(requestId As Integer, approverUser As String, approverRole As String) As Task(Of (Success As Boolean, Message As String))
         Function RejectRequestAsync(requestId As Integer, reason As String, adminUserName As String) As Task(Of Boolean)
+        Function CancelRequestAsync(requestId As Integer, userName As String) As Task(Of Boolean)
         Function GetFCFSQueueAsync() As Task(Of IEnumerable(Of RentalRequest))
         ''' <summary>Determines which ApprovalStage a request should start at given the submitter role and grand total.</summary>
         Function DetermineInitialStage(submitterRole As String, grandTotal As Decimal) As ApprovalStage
@@ -29,20 +30,6 @@ Namespace Services
         Function GetLowStockItemsAsync() As Task(Of IEnumerable(Of InventoryItem))
         Function GetInventoryForRequestAsync() As Task(Of IEnumerable(Of InventoryItem))
         Function GetItemPriceJsonAsync() As Task(Of Dictionary(Of Integer, Decimal))
-    End Interface
-
-    Public Interface IHallBookingService
-        Function GetAllFacilitiesAsync() As Task(Of IEnumerable(Of CommunityHall))
-        Function GetFacilityByIdAsync(id As Integer) As Task(Of CommunityHall)
-        Function GetAllBookingsAsync() As Task(Of IEnumerable(Of HallBooking))
-        Function GetUserBookingsAsync(userId As String) As Task(Of IEnumerable(Of HallBooking))
-        Function CreateFacilityAsync(vm As HallViewModel) As Task(Of Boolean)
-        Function UpdateFacilityAsync(vm As HallViewModel) As Task(Of Boolean)
-        Function CreateBookingAsync(vm As HallBookingViewModel, userId As String) As Task(Of (Success As Boolean, Message As String))
-        Function ApproveBookingAsync(bookingId As Integer, adminUserName As String) As Task(Of Boolean)
-        Function RejectBookingAsync(bookingId As Integer, reason As String, adminUserName As String) As Task(Of Boolean)
-        Function AreFacilitiesAvailableAsync(facilityIds As List(Of Integer), [date] As DateTime, startTime As TimeSpan, endTime As TimeSpan) As Task(Of (Available As Boolean, ConflictingFacility As String))
-        Function GetCalendarEventsAsync() As Task(Of IEnumerable(Of Object))
     End Interface
 
     Public Interface IReportService

@@ -10,9 +10,6 @@ Namespace Data
             MyBase.New(options)
         End Sub
 
-        Public Property CommunityHalls As DbSet(Of CommunityHall)
-        Public Property HallBookings As DbSet(Of HallBooking)
-        Public Property BookingFacilities As DbSet(Of BookingFacility)
         Public Property InventoryCategories As DbSet(Of InventoryCategory)
         Public Property InventoryItems As DbSet(Of InventoryItem)
         Public Property RentalRequests As DbSet(Of RentalRequest)
@@ -22,6 +19,7 @@ Namespace Data
         Public Property AuditLogs As DbSet(Of AuditLog)
         Public Property InventoryTransactions As DbSet(Of InventoryTransaction)
         Public Property Employees As DbSet(Of Employee)
+        Public Property InventoryAllocations As DbSet(Of InventoryAllocation)
 
         Protected Overrides Sub OnModelCreating(builder As ModelBuilder)
             MyBase.OnModelCreating(builder)
@@ -51,27 +49,6 @@ Namespace Data
                     .OnDelete(DeleteBehavior.Restrict)
             End Sub)
 
-            ' ── CommunityHall (Facility Master) ──────────────────────────────────
-            builder.Entity(Of CommunityHall)(Sub(e)
-                e.Property(Function(h) h.RentalRatePerDay).HasColumnType("decimal(10,2)")
-                e.Property(Function(h) h.Name).HasMaxLength(150).IsRequired()
-            End Sub)
-
-            ' ── HallBooking ───────────────────────────────────────────────────────
-            builder.Entity(Of HallBooking)(Sub(e)
-                e.HasOne(Function(b) b.User).WithMany(Function(u) u.HallBookings) _
-                    .HasForeignKey(Function(b) b.UserId).OnDelete(DeleteBehavior.Restrict)
-                e.Property(Function(b) b.TotalAmount).HasColumnType("decimal(10,2)")
-            End Sub)
-
-            ' ── BookingFacility (join table) ──────────────────────────────────────
-            builder.Entity(Of BookingFacility)(Sub(e)
-                e.HasOne(Function(bf) bf.HallBooking).WithMany(Function(b) b.BookingFacilities) _
-                    .HasForeignKey(Function(bf) bf.BookingId).OnDelete(DeleteBehavior.Cascade)
-                e.HasOne(Function(bf) bf.Facility).WithMany(Function(h) h.HallBookings) _
-                    .HasForeignKey(Function(bf) bf.FacilityId).OnDelete(DeleteBehavior.Restrict)
-                e.Property(Function(bf) bf.RateAtBooking).HasColumnType("decimal(10,2)")
-            End Sub)
 
             ' ── InventoryItem ────────────────────────────────────────────────────
             builder.Entity(Of InventoryItem)(Sub(e)
@@ -126,6 +103,15 @@ Namespace Data
             builder.Entity(Of InventoryTransaction)(Sub(e)
                 e.HasOne(Function(t) t.InventoryItem).WithMany(Function(i) i.InventoryTransactions) _
                     .HasForeignKey(Function(t) t.InventoryItemId).OnDelete(DeleteBehavior.Restrict)
+            End Sub)
+
+            ' ── InventoryAllocation ───────────────────────────────────────────────
+            builder.Entity(Of InventoryAllocation)(Sub(e)
+                e.HasKey(Function(a) a.AllocationId)
+                e.HasOne(Function(a) a.RentalRequest).WithMany(Function(r) r.InventoryAllocations) _
+                    .HasForeignKey(Function(a) a.RequestId).OnDelete(DeleteBehavior.Cascade)
+                e.HasOne(Function(a) a.InventoryItem).WithMany() _
+                    .HasForeignKey(Function(a) a.InventoryItemId).OnDelete(DeleteBehavior.Restrict)
             End Sub)
         End Sub
     End Class

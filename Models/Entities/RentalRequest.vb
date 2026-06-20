@@ -49,17 +49,25 @@ Namespace Models.Entities
         <Display(Name:="HOD Approved At")>
         Public Property HODApprovedAt As DateTime?
 
-        <StringLength(150)>
-        <Display(Name:="HOD Approved By")>
-        Public Property HODApprovedBy As String = String.Empty
+        <StringLength(50)>
+        <Display(Name:="HOD Approved By Employee ID")>
+        Public Property HODApprovedByEmployeeId As String = String.Empty
 
         ' ── GM Approval ───────────────────────────────────────────────────────────
         <Display(Name:="GM Approved At")>
         Public Property GMApprovedAt As DateTime?
 
-        <StringLength(150)>
-        <Display(Name:="GM Approved By")>
-        Public Property GMApprovedBy As String = String.Empty
+        <StringLength(50)>
+        <Display(Name:="GM Approved By Employee ID")>
+        Public Property GMApprovedByEmployeeId As String = String.Empty
+
+        ' ── HR Approval ───────────────────────────────────────────────────────────
+        <Display(Name:="HR Approved At")>
+        Public Property HRApprovedAt As DateTime?
+
+        <StringLength(50)>
+        <Display(Name:="HR Approved By Employee ID")>
+        Public Property HRApprovedByEmployeeId As String = String.Empty
 
         ''' <summary>FCFS: Millisecond-precision timestamp — earlier = higher priority</summary>
         <Display(Name:="Submitted At")>
@@ -68,14 +76,16 @@ Namespace Models.Entities
         <Display(Name:="Reviewed At")>
         Public Property ReviewedAt As DateTime?
 
-        <StringLength(100)>
-        Public Property ReviewedBy As String = String.Empty
+        <StringLength(50)>
+        <Display(Name:="Reviewed By Employee ID")>
+        Public Property ReviewedByEmployeeId As String = String.Empty
 
         <StringLength(500)>
         Public Property RejectionReason As String = String.Empty
 
         ' Navigation
         Public Property RentalRequestItems As ICollection(Of RentalRequestItem) = New List(Of RentalRequestItem)()
+        Public Property InventoryAllocations As ICollection(Of InventoryAllocation) = New List(Of InventoryAllocation)()
     End Class
 
     Public Enum RequestStatus

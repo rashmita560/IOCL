@@ -42,8 +42,6 @@ Namespace Controllers
                 Where(Function(r) r.Status = RequestStatus.Approved AndAlso r.CreatedAt.Month = DateTime.Now.Month AndAlso r.CreatedAt.Year = DateTime.Now.Year).
                 SumAsync(Function(r) CDbl(r.GrandTotal)))
             vm.TotalInventoryItems = Await _context.InventoryItems.CountAsync(Function(i) i.IsActive)
-            vm.TotalHallBookings = Await _context.HallBookings.CountAsync()
-            vm.PendingHallBookings = Await _context.HallBookings.CountAsync(Function(b) b.Status = BookingStatus.Pending)
             vm.LowStockItemCount = (Await _inventoryService.GetLowStockItemsAsync()).Count()
 
             ' ── Monthly Revenue Chart (last 6 months) ────────────────────────────
@@ -88,11 +86,6 @@ Namespace Controllers
                 Include(Function(r) r.User).
                 OrderByDescending(Function(r) r.CreatedAt).
                 Take(5).ToListAsync()
-            vm.RecentHallBookings = Await _context.HallBookings.
-                Include(Function(b) b.BookingFacilities).ThenInclude(Function(bf) bf.Facility).
-                Include(Function(b) b.User).
-                OrderByDescending(Function(b) b.CreatedAt).
-                Take(5).ToListAsync()
             vm.LowStockItems = (Await _inventoryService.GetLowStockItemsAsync()).ToList()
 
             ViewBag.MonthlyRevenueJson = JsonSerializer.Serialize(vm.MonthlyRevenueData)
@@ -118,18 +111,15 @@ Namespace Controllers
         Inherits Controller
 
         Private ReadOnly _rentalService As IRentalService
-        Private ReadOnly _hallBookingService As IHallBookingService
         Private ReadOnly _userManager As UserManager(Of ApplicationUser)
         Private ReadOnly _auditService As IAuditService
         Private ReadOnly _notificationService As INotificationService
 
         Public Sub New(rentalService As IRentalService,
-                       hallBookingService As IHallBookingService,
                        userManager As UserManager(Of ApplicationUser),
                        auditService As IAuditService,
                        notificationService As INotificationService)
             _rentalService = rentalService
-            _hallBookingService = hallBookingService
             _userManager = userManager
             _auditService = auditService
             _notificationService = notificationService
@@ -240,132 +230,5 @@ Namespace Controllers
             Return RedirectToAction("Details", New With {.id = id})
         End Function
 
-        ' Hall Booking actions (SuperAdmin only)
-        <Authorize(Roles:="SuperAdmin")>
-        <HttpPost>
-        <ValidateAntiForgeryToken>
-        Public Async Function ApproveHallBooking(id As Integer) As Task(Of IActionResult)
-            Dim adminUser As ApplicationUser = Await _userManager.GetUserAsync(Me.User)
-            Await _hallBookingService.ApproveBookingAsync(id, adminUser.UserName)
-            TempData("Success") = "Hall booking approved."
-            Return RedirectToAction("HallBookings")
-        End Function
-
-        <Authorize(Roles:="SuperAdmin")>
-        <HttpPost>
-        <ValidateAntiForgeryToken>
-        Public Async Function RejectHallBooking(id As Integer, reason As String) As Task(Of IActionResult)
-            Dim adminUser As ApplicationUser = Await _userManager.GetUserAsync(Me.User)
-            Await _hallBookingService.RejectBookingAsync(id, reason, adminUser.UserName)
-            TempData("Success") = "Hall booking rejected."
-            Return RedirectToAction("HallBookings")
-        End Function
-
-        <Authorize(Roles:="SuperAdmin")>
-        Public Async Function HallBookings() As Task(Of IActionResult)
-            Dim bookings = Await _hallBookingService.GetAllBookingsAsync()
-            Return View(bookings)
-        End Function
-
-        <Authorize(Roles:="SuperAdmin")>
-        Public Function Calendar() As IActionResult
-            Return View()
-        End Function
-
-        <Authorize(Roles:="SuperAdmin")>
-        <HttpGet>
-        Public Async Function GetCalendarEvents() As Task(Of JsonResult)
-            Dim events = Await _hallBookingService.GetCalendarEventsAsync()
-            Return Json(events)
-        End Function
-    End Class
-
-    <Authorize(Roles:="SuperAdmin")>
-    Public Class FacilityController
-        Inherits Controller
-
-        Private ReadOnly _hallBookingService As IHallBookingService
-
-        Public Sub New(hallBookingService As IHallBookingService)
-            _hallBookingService = hallBookingService
-        End Sub
-
-        Public Async Function Index() As Task(Of IActionResult)
-            Dim facilities = Await _hallBookingService.GetAllFacilitiesAsync()
-            Return View(facilities)
-        End Function
-
-        <HttpGet>
-        Public Function Create() As IActionResult
-            Return View(New HallViewModel())
-        End Function
-
-        <HttpPost>
-        <ValidateAntiForgeryToken>
-        Public Async Function Create(vm As HallViewModel) As Task(Of IActionResult)
-            If Not ModelState.IsValid Then Return View(vm)
-            Await _hallBookingService.CreateFacilityAsync(vm)
-            TempData("Success") = $"Facility '{vm.Name}' created successfully."
-            Return RedirectToAction("Index")
-        End Function
-
-        <HttpGet>
-        Public Async Function Edit(id As Integer) As Task(Of IActionResult)
-            Dim facility = Await _hallBookingService.GetFacilityByIdAsync(id)
-            If facility Is Nothing Then Return NotFound()
-            Dim vm = New HallViewModel With {
-                .Id = facility.Id,
-                .Name = facility.Name,
-                .FacilityType = facility.FacilityType,
-                .Description = facility.Description,
-                .Location = facility.Location,
-                .Capacity = facility.Capacity,
-                .Facilities = facility.Facilities,
-                .RentalRatePerDay = facility.RentalRatePerDay,
-                .DisplayOrder = facility.DisplayOrder,
-                .Status = facility.Status,
-                .IsActive = facility.IsActive,
-                .ImagePath = facility.ImagePath
-            }
-            Return View(vm)
-        End Function
-
-        <HttpPost>
-        <ValidateAntiForgeryToken>
-        Public Async Function Edit(vm As HallViewModel) As Task(Of IActionResult)
-            If Not ModelState.IsValid Then Return View(vm)
-            Dim success = Await _hallBookingService.UpdateFacilityAsync(vm)
-            If success Then
-                TempData("Success") = $"Facility '{vm.Name}' updated successfully."
-            Else
-                TempData("Error") = "Facility not found."
-            End If
-            Return RedirectToAction("Index")
-        End Function
-
-        <HttpPost>
-        <ValidateAntiForgeryToken>
-        Public Async Function ToggleActive(id As Integer) As Task(Of IActionResult)
-            Dim facility = Await _hallBookingService.GetFacilityByIdAsync(id)
-            If facility IsNot Nothing Then
-                Dim vm = New HallViewModel With {
-                    .Id = facility.Id,
-                    .Name = facility.Name,
-                    .FacilityType = facility.FacilityType,
-                    .Description = facility.Description,
-                    .Location = facility.Location,
-                    .Capacity = facility.Capacity,
-                    .Facilities = facility.Facilities,
-                    .RentalRatePerDay = facility.RentalRatePerDay,
-                    .DisplayOrder = facility.DisplayOrder,
-                    .Status = facility.Status,
-                    .IsActive = Not facility.IsActive,
-                    .ImagePath = facility.ImagePath
-                }
-                Await _hallBookingService.UpdateFacilityAsync(vm)
-                TempData("Success") = $"Facility '{facility.Name}' {If(Not facility.IsActive, "activated", "deactivated")}."
-            End If
-            Return RedirectToAction("Index")
-        End Function
     End Class
 End Namespace

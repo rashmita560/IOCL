@@ -75,25 +75,19 @@
 {
     <!-- Report Summary Widgets -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card p-3 border shadow-sm">
                 <span class="text-muted small text-uppercase fw-bold">Grand Total Revenue</span>
                 <h3 class="fw-bold text-primary mb-0">₹@Model.TotalRevenue.ToString("N2")</h3>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card p-3 border shadow-sm">
                 <span class="text-muted small text-uppercase fw-bold">Approved Rentals</span>
                 <h3 class="fw-bold text-success mb-0">@Model.TotalRentals</h3>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card p-3 border shadow-sm">
-                <span class="text-muted small text-uppercase fw-bold">Hall Bookings</span>
-                <h3 class="fw-bold text-info mb-0">@Model.TotalHallBookings</h3>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card p-3 border shadow-sm">
                 <span class="text-muted small text-uppercase fw-bold">Pending/Rejected Ratio</span>
                 <h3 class="fw-bold text-warning mb-0">@Model.PendingCount / @Model.RejectedCount</h3>
@@ -103,7 +97,7 @@
 
     <div class="row g-4">
         <!-- Most Used Items -->
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card iocl-card shadow-sm h-100">
                 <div class="card-header iocl-card-header"><i class="bi bi-box-seam me-2"></i>Most Rented Inventory Items</div>
                 <div class="card-body p-0">
@@ -130,41 +124,6 @@
                             else
                             {
                                 <tr><td colspan="3" class="text-center py-4 text-muted">No rental logs found.</td></tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Hall Utilization -->
-        <div class="col-md-6">
-            <div class="card iocl-card shadow-sm h-100">
-                <div class="card-header iocl-card-header"><i class="bi bi-houses me-2"></i>Community Hall Bookings Utilization</div>
-                <div class="card-body p-0">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3">Hall Name</th>
-                                <th class="text-center">Total Bookings</th>
-                                <th class="text-end">Total Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model.HallUtilization != null && Model.HallUtilization.Any())
-                            {
-                                foreach (var hall in Model.HallUtilization)
-                                {
-                                    <tr>
-                                        <td class="ps-3 fw-bold">@hall.HallName</td>
-                                        <td class="text-center">@hall.TotalBookings</td>
-                                        <td class="text-end fw-bold text-primary">₹@hall.TotalRevenue.ToString("N2")</td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr><td colspan="3" class="text-center py-4 text-muted">No booking logs found.</td></tr>
                             }
                         </tbody>
                     </table>

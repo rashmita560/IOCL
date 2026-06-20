@@ -120,15 +120,10 @@
                                 <i class="bi bi-speedometer2 me-1"></i>Dashboard
                             </a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle px-3 py-2 text-white @(controller == "AdminRequest" ? "active-link" : "")" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-file-earmark-text me-1"></i>Bookings
+                        <li class="nav-item">
+                            <a asp-controller="AdminRequest" asp-action="Index" class="nav-link px-3 py-2 text-white @(controller == "AdminRequest" ? "active-link" : "")">
+                                <i class="bi bi-file-earmark-text me-1"></i>Rental Requests
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a asp-controller="AdminRequest" asp-action="Index" class="dropdown-item"><i class="bi bi-card-list me-2"></i>Rental Requests</a></li>
-                                <li><a asp-controller="AdminRequest" asp-action="HallBookings" class="dropdown-item"><i class="bi bi-building me-2"></i>Hall Bookings</a></li>
-                                <li><a asp-controller="AdminRequest" asp-action="Calendar" class="dropdown-item"><i class="bi bi-calendar3-range me-2"></i>Hall Calendar</a></li>
-                            </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle px-3 py-2 text-white @((controller == "Inventory" || controller == "Price") ? "active-link" : "")" href="#" role="button" data-bs-toggle="dropdown">
@@ -140,6 +135,7 @@
                                 <li><a asp-controller="Price" asp-action="History" class="dropdown-item"><i class="bi bi-clock-history me-2"></i>Price History</a></li>
                             </ul>
                         </li>
+                        @* Hide Analytics dropdown from frontend UI
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle px-3 py-2 text-white @((controller == "Reports" || controller == "Audit") ? "active-link" : "")" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-bar-chart-line me-1"></i>Analytics
@@ -149,13 +145,13 @@
                                 <li><a asp-controller="Audit" asp-action="Index" class="dropdown-item"><i class="bi bi-journal-text me-2"></i>Audit Logs</a></li>
                             </ul>
                         </li>
+                        *@
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle px-3 py-2 text-white @((controller == "SuperAdmin" || controller == "Facility") ? "active-link" : "")" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle px-3 py-2 text-white @(controller == "SuperAdmin" ? "active-link" : "")" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-shield-lock me-1"></i>Super Admin
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a asp-controller="SuperAdmin" asp-action="Users" class="dropdown-item"><i class="bi bi-people me-2"></i>User Accounts</a></li>
-                                <li><a asp-controller="Facility" asp-action="Index" class="dropdown-item"><i class="bi bi-buildings me-2"></i>Facility Management</a></li>
                             </ul>
                         </li>
                         @* SuperAdmin self-booking links *@
@@ -186,11 +182,7 @@
                                 <li><a asp-controller="RentalRequest" asp-action="MyRequests" class="dropdown-item"><i class="bi bi-card-list me-2"></i>My Requests</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a asp-controller="HallBooking" asp-action="Index" class="nav-link px-3 py-2 text-white @(controller == "HallBooking" ? "active-link" : "")">
-                                <i class="bi bi-building me-1"></i>Browse Halls
-                            </a>
-                        </li>
+
                         <li class="nav-item">
                             <a asp-controller="Notification" asp-action="Index" class="nav-link px-3 py-2 text-white @(controller == "Notification" ? "active-link" : "")">
                                 <i class="bi bi-bell-fill me-1"></i>Notifications
@@ -214,11 +206,7 @@
                                 <li><a asp-controller="RentalRequest" asp-action="MyRequests" class="dropdown-item"><i class="bi bi-card-list me-2"></i>My Requests</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a asp-controller="HallBooking" asp-action="Index" class="nav-link px-3 py-2 text-white @(controller == "HallBooking" ? "active-link" : "")">
-                                <i class="bi bi-building me-1"></i>Browse Halls
-                            </a>
-                        </li>
+
                         <li class="nav-item">
                             <a asp-controller="Notification" asp-action="Index" class="nav-link px-3 py-2 text-white @(controller == "Notification" ? "active-link" : "")">
                                 <i class="bi bi-bell-fill me-1"></i>Notifications
