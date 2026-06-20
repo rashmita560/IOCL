@@ -1,6 +1,29 @@
 @model IOCLCommunityHall.Models.ViewModels.DashboardViewModel
+@inject IOCLCommunityHall.Data.ApplicationDbContext DbContext
 @{
     ViewData["Title"] = "Admin Dashboard";
+
+    string GetHODDisplayName(string dept)
+    {
+        var hodRole = DbContext.Roles.FirstOrDefault(r => r.Name == "HOD");
+        if (hodRole == null) return "";
+        var hodUser = !string.IsNullOrEmpty(dept) ? DbContext.Users.FirstOrDefault(u => u.Department == dept && 
+            DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hodRole.Id)) : null;
+        if (hodUser == null)
+        {
+            hodUser = DbContext.Users.FirstOrDefault(u => 
+                DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hodRole.Id));
+        }
+        return hodUser != null ? $"{hodUser.FullName} - {hodUser.EmployeeId}" : "";
+    }
+
+    string GetUserDisplayNameByEmpId(string empId)
+    {
+        if (string.IsNullOrEmpty(empId)) return "";
+        if (empId == "SYSTEM") return "SYSTEM";
+        var user = DbContext.Users.FirstOrDefault(u => u.EmployeeId == empId || u.UserName == empId);
+        return user != null ? $"{user.FullName} - {user.EmployeeId}" : empId;
+    }
 }
 
 <!-- Hero Banner -->
@@ -169,7 +192,7 @@
                                             @if (req.Status == RequestStatus.Pending)
                                             {
                                                 <span class="badge badge-pending iocl-badge">
-                                                    @(req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHOD ? "Pending to HOD" : 
+                                                    @(req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(req.User?.Department)})" : 
                                                       req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingGM ? "Pending to GM" : 
                                                       req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHR ? "Pending to HR" : "Pending")
                                                 </span>
@@ -180,7 +203,9 @@
                                             }
                                             else
                                             {
-                                                <span class="badge badge-rejected iocl-badge">Rejected</span>
+                                                <span class="badge badge-rejected iocl-badge">
+                                                    @(string.IsNullOrEmpty(req.ReviewedByEmployeeId) ? "Rejected" : $"Rejected by {GetUserDisplayNameByEmpId(req.ReviewedByEmployeeId)}")
+                                                </span>
                                             }
                                         </td>
                                         <td class="pe-3 text-end">

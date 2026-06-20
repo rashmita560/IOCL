@@ -1,11 +1,34 @@
 @model IOCLCommunityHall.Models.Entities.RentalRequest
 @using IOCLCommunityHall.Models.Entities
+@inject IOCLCommunityHall.Data.ApplicationDbContext DbContext
 @{
     ViewData["Title"] = "Request Details";
     var hasStockConflict = false;
     var currentUserId = ViewBag.CurrentUserId as string ?? "";
     var currentRole = ViewBag.CurrentRole as string ?? "";
     var isSelfRequest = ViewBag.IsSelfRequest is bool b && b;
+
+    string GetHODDisplayName(string dept)
+    {
+        var hodRole = DbContext.Roles.FirstOrDefault(r => r.Name == "HOD");
+        if (hodRole == null) return "";
+        var hodUser = !string.IsNullOrEmpty(dept) ? DbContext.Users.FirstOrDefault(u => u.Department == dept && 
+            DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hodRole.Id)) : null;
+        if (hodUser == null)
+        {
+            hodUser = DbContext.Users.FirstOrDefault(u => 
+                DbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == hodRole.Id));
+        }
+        return hodUser != null ? $"{hodUser.FullName} - {hodUser.EmployeeId}" : "";
+    }
+
+    string GetUserDisplayNameByEmpId(string empId)
+    {
+        if (string.IsNullOrEmpty(empId)) return "";
+        if (empId == "SYSTEM") return "SYSTEM";
+        var user = DbContext.Users.FirstOrDefault(u => u.EmployeeId == empId || u.UserName == empId);
+        return user != null ? $"{user.FullName} - {user.EmployeeId}" : empId;
+    }
 
     // Determine if the current user can approve at the current stage
     bool canApprove = !isSelfRequest &&
@@ -33,10 +56,12 @@
                 <span><i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>Rental Request #@Model.RequestNumber</span>
                 <span class="badge @(Model.Status == RequestStatus.Pending ? "badge-pending" : Model.Status == RequestStatus.Approved ? "badge-approved" : "badge-rejected") iocl-badge">
                     @(Model.Status == RequestStatus.Pending ? 
-                      (Model.ApprovalStage == ApprovalStage.PendingHOD ? "Pending to HOD" : 
+                      (Model.ApprovalStage == ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(Model.User?.Department)})" : 
                        Model.ApprovalStage == ApprovalStage.PendingGM ? "Pending to GM" : 
                        Model.ApprovalStage == ApprovalStage.PendingHR ? "Pending to HR" : "Pending") : 
-                      Model.Status.ToString())
+                      (Model.Status == RequestStatus.Rejected ? 
+                       (string.IsNullOrEmpty(Model.ReviewedByEmployeeId) ? "Rejected" : $"Rejected by {GetUserDisplayNameByEmpId(Model.ReviewedByEmployeeId)}") : 
+                       Model.Status.ToString()))
                 </span>
             </div>
             <div class="card-body p-4">
@@ -81,13 +106,13 @@
                                 @if (!string.IsNullOrEmpty(Model.HODApprovedByEmployeeId))
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.HODApprovedAt?.ToString("dd MMM yyyy HH:mm")">
-                                        <i class="bi bi-check-circle-fill me-1"></i>HOD (Emp: @Model.HODApprovedByEmployeeId)
+                                        <i class="bi bi-check-circle-fill me-1"></i>HOD: @GetUserDisplayNameByEmpId(Model.HODApprovedByEmployeeId)
                                     </span>
                                 }
                                 else if (Model.ApprovalStage == ApprovalStage.PendingHOD && Model.Status == RequestStatus.Pending)
                                 {
                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">
-                                        <i class="bi bi-hourglass-split me-1"></i>HOD: Pending
+                                        <i class="bi bi-hourglass-split me-1"></i>HOD: Pending (Emp: @GetHODDisplayName(Model.User?.Department))
                                     </span>
                                 }
                                 else
@@ -108,7 +133,7 @@
                                 @if (!string.IsNullOrEmpty(Model.GMApprovedByEmployeeId))
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.GMApprovedAt?.ToString("dd MMM yyyy HH:mm")">
-                                        <i class="bi bi-check-circle-fill me-1"></i>GM (Emp: @Model.GMApprovedByEmployeeId)
+                                        <i class="bi bi-check-circle-fill me-1"></i>GM: @GetUserDisplayNameByEmpId(Model.GMApprovedByEmployeeId)
                                     </span>
                                 }
                                 else if (Model.ApprovalStage == ApprovalStage.PendingGM && Model.Status == RequestStatus.Pending)
@@ -143,7 +168,7 @@
                                 @if (!string.IsNullOrEmpty(Model.HRApprovedByEmployeeId))
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" title="@Model.HRApprovedAt?.ToString("dd MMM yyyy HH:mm")">
-                                        <i class="bi bi-check-circle-fill me-1"></i>HR (Emp: @Model.HRApprovedByEmployeeId)
+                                        <i class="bi bi-check-circle-fill me-1"></i>HR: @GetUserDisplayNameByEmpId(Model.HRApprovedByEmployeeId)
                                     </span>
                                 }
                                 else if (Model.Status == RequestStatus.Rejected)
@@ -173,13 +198,13 @@
                     @if (Model.Status == RequestStatus.Approved && !string.IsNullOrEmpty(Model.ReviewedByEmployeeId))
                     {
                         <div class="mt-1 text-muted" style="font-size:0.78rem;">
-                            Final Approver: <strong>Employee ID @Model.ReviewedByEmployeeId</strong> (Approved At: @Model.ReviewedAt?.ToString("dd MMM yyyy HH:mm"))
+                            Final Approver: <strong>@GetUserDisplayNameByEmpId(Model.ReviewedByEmployeeId)</strong> (Approved At: @Model.ReviewedAt?.ToString("dd MMM yyyy HH:mm"))
                         </div>
                     }
                     @if (Model.Status == RequestStatus.Rejected && !string.IsNullOrEmpty(Model.ReviewedByEmployeeId))
                     {
                         <div class="mt-1 text-muted" style="font-size:0.78rem;">
-                            Rejected By: <strong>Employee ID @Model.ReviewedByEmployeeId</strong> (Rejected At: @Model.ReviewedAt?.ToString("dd MMM yyyy HH:mm"))
+                            Rejected By: <strong>@GetUserDisplayNameByEmpId(Model.ReviewedByEmployeeId)</strong> (Rejected At: @Model.ReviewedAt?.ToString("dd MMM yyyy HH:mm"))
                         </div>
                     }
                 </div>

@@ -222,7 +222,7 @@ Namespace Controllers
                 TempData("Error") = "Rejection reason is required."
                 Return RedirectToAction("Details", New With {.id = id})
             End If
-            Dim success = Await _rentalService.RejectRequestAsync(id, reason, currentUser.UserName)
+            Dim success = Await _rentalService.RejectRequestAsync(id, reason, currentUser.EmployeeId)
             Await _auditService.LogAsync(currentUser.Id, "Reject", "RentalRequest", id.ToString(),
                 $"Request rejected. Reason: {reason}", "", "Rejected",
                 HttpContext.Connection.RemoteIpAddress?.ToString())

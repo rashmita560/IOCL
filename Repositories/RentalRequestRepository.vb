@@ -23,6 +23,7 @@ Namespace Repositories
 
         Public Async Function GetUserRequestsAsync(userId As String) As Task(Of IEnumerable(Of RentalRequest)) Implements IRentalRequestRepository.GetUserRequestsAsync
             Return Await _context.RentalRequests.
+                Include(Function(r) r.User).
                 Include(Function(r) r.RentalRequestItems).
                     ThenInclude(Function(ri) ri.InventoryItem).
                 Where(Function(r) r.UserId = userId).
