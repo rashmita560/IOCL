@@ -251,23 +251,23 @@
                                             @if (req.Status == RequestStatus.Pending)
                                             {
                                                 <span class="badge badge-pending iocl-badge">
-                                                    @(req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(req.User?.Department)})" : 
-                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingGM ? $"Pending with GM ({GetGMDisplayName()})" : 
-                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHR ? $"Pending with HR ({GetHRDisplayName()})" : "Pending")
+                                                    @(req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHOD ? $"PENDING TO HOD ({GetHODDisplayName(req.User?.Department)})" : 
+                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingGM ? $"PENDING TO GM ({GetGMDisplayName()})" : 
+                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHR ? $"PENDING TO HR ({GetHRDisplayName()})" : "PENDING")
                                                 </span>
                                             }
                                             else if (req.Status == RequestStatus.Approved)
                                             {
-                                                <span class="badge badge-approved iocl-badge">Approved</span>
+                                                <span class="badge badge-approved iocl-badge">APPROVED</span>
                                             }
                                             else if (req.Status == RequestStatus.Cancelled)
                                             {
-                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                <span class="badge bg-secondary text-white iocl-badge">CANCELLED</span>
                                             }
                                             else
                                             {
                                                 <span class="badge badge-rejected iocl-badge">
-                                                    @(string.IsNullOrEmpty(req.ReviewedByEmployeeId) ? "Rejected" : $"Rejected by {GetUserDisplayNameByEmpId(req.ReviewedByEmployeeId)}")
+                                                    @(string.IsNullOrEmpty(req.ReviewedByEmployeeId) ? "REJECTED" : $"Rejected by {GetUserDisplayNameByEmpId(req.ReviewedByEmployeeId)}")
                                                 </span>
                                             }
                                         </td>

@@ -88,12 +88,12 @@
                 <span><i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>Rental Request #@Model.RequestNumber</span>
                 <span class="badge @(Model.Status == RequestStatus.Pending ? "badge-pending" : Model.Status == RequestStatus.Approved ? "badge-approved" : Model.Status == RequestStatus.Cancelled ? "bg-secondary text-white" : "badge-rejected") iocl-badge">
                     @(Model.Status == RequestStatus.Pending ? 
-                      (Model.ApprovalStage == ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(Model.User?.Department)})" : 
-                       Model.ApprovalStage == ApprovalStage.PendingGM ? $"Pending to GM ({GetGMDisplayName()})" : 
-                       Model.ApprovalStage == ApprovalStage.PendingHR ? $"Pending to HR ({GetHRDisplayName()})" : "Pending") : 
+                      (Model.ApprovalStage == ApprovalStage.PendingHOD ? $"PENDING TO HOD ({GetHODDisplayName(Model.User?.Department)})" : 
+                       Model.ApprovalStage == ApprovalStage.PendingGM ? $"PENDING TO GM ({GetGMDisplayName()})" : 
+                       Model.ApprovalStage == ApprovalStage.PendingHR ? $"PENDING TO HR ({GetHRDisplayName()})" : "PENDING") : 
                       (Model.Status == RequestStatus.Rejected ? 
-                       (string.IsNullOrEmpty(Model.ReviewedByEmployeeId) ? "Rejected" : $"Rejected by {GetUserDisplayNameByEmpId(Model.ReviewedByEmployeeId)}") : 
-                       Model.Status == RequestStatus.Cancelled ? "Cancelled" : Model.Status.ToString()))
+                       (string.IsNullOrEmpty(Model.ReviewedByEmployeeId) ? "REJECTED" : $"Rejected by {GetUserDisplayNameByEmpId(Model.ReviewedByEmployeeId)}") : 
+                       Model.Status == RequestStatus.Cancelled ? "CANCELLED" : Model.Status.ToString().ToUpper()))
                 </span>
             </div>
             <div class="card-body p-4">

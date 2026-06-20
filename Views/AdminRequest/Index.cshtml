@@ -68,9 +68,9 @@
             return "<span class=\"badge bg-secondary text-white iocl-badge\">Cancelled</span>";
         }
         return r.ApprovalStage switch {
-            ApprovalStage.PendingHOD => $"<span class=\"badge bg-warning-subtle text-warning border border-warning-subtle\">Pending HOD (Emp: {GetHODDisplayName(r.User?.Department)})</span>",
-            ApprovalStage.PendingGM  => $"<span class=\"badge bg-info-subtle text-info border border-info-subtle\">Pending GM (Emp: {GetGMDisplayName()})</span>",
-            ApprovalStage.PendingHR  => $"<span class=\"badge bg-primary-subtle text-primary border border-primary-subtle\">Pending HR (Emp: {GetHRDisplayName()})</span>",
+            ApprovalStage.PendingHOD => $"<span class=\"badge badge-pending iocl-badge\">Pending to HOD ({GetHODDisplayName(r.User?.Department)})</span>",
+            ApprovalStage.PendingGM  => $"<span class=\"badge badge-pending iocl-badge\">Pending to GM ({GetGMDisplayName()})</span>",
+            ApprovalStage.PendingHR  => $"<span class=\"badge badge-pending iocl-badge\">Pending to HR ({GetHRDisplayName()})</span>",
             ApprovalStage.Approved   => "<span class=\"badge badge-approved iocl-badge\">Approved</span>",
             ApprovalStage.Rejected   => $"<span class=\"badge badge-rejected iocl-badge\">{(string.IsNullOrEmpty(r.ReviewedByEmployeeId) ? "Rejected" : $"Rejected by {GetUserDisplayNameByEmpId(r.ReviewedByEmployeeId)}")}</span>",
             _ => r.ApprovalStage.ToString()
@@ -150,23 +150,23 @@
                                             @if (req.Status == RequestStatus.Pending)
                                             {
                                                 <span class="badge badge-pending iocl-badge">
-                                                    @(req.ApprovalStage == ApprovalStage.PendingHOD ? $"Pending to HOD ({GetHODDisplayName(req.User?.Department)})" : 
-                                                      req.ApprovalStage == ApprovalStage.PendingGM ? $"Pending to GM ({GetGMDisplayName()})" : 
-                                                      req.ApprovalStage == ApprovalStage.PendingHR ? $"Pending to HR ({GetHRDisplayName()})" : "Pending")
+                                                    @(req.ApprovalStage == ApprovalStage.PendingHOD ? $"PENDING TO HOD ({GetHODDisplayName(req.User?.Department)})" : 
+                                                      req.ApprovalStage == ApprovalStage.PendingGM ? $"PENDING TO GM ({GetGMDisplayName()})" : 
+                                                      req.ApprovalStage == ApprovalStage.PendingHR ? $"PENDING TO HR ({GetHRDisplayName()})" : "PENDING")
                                                 </span>
                                             }
                                             else if (req.Status == RequestStatus.Approved)
                                             {
-                                                <span class="badge badge-approved iocl-badge">Approved</span>
+                                                <span class="badge badge-approved iocl-badge">APPROVED</span>
                                             }
                                             else if (req.Status == RequestStatus.Cancelled)
                                             {
-                                                <span class="badge bg-secondary text-white iocl-badge">Cancelled</span>
+                                                <span class="badge bg-secondary text-white iocl-badge">CANCELLED</span>
                                             }
                                             else
                                             {
                                                 <span class="badge badge-rejected iocl-badge">
-                                                    @(string.IsNullOrEmpty(req.ReviewedByEmployeeId) ? "Rejected" : $"Rejected by {GetUserDisplayNameByEmpId(req.ReviewedByEmployeeId)}")
+                                                    @(string.IsNullOrEmpty(req.ReviewedByEmployeeId) ? "REJECTED" : $"Rejected by {GetUserDisplayNameByEmpId(req.ReviewedByEmployeeId)}")
                                                 </span>
                                             }
                                         </td>
