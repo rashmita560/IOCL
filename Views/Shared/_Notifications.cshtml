@@ -1,0 +1,30 @@
+@model IEnumerable<IOCLCommunityHall.Models.Entities.Notification>
+
+<div class="notif-list-container" id="headerNotifContainer">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var notif in Model)
+        {
+            <div class="notif-item @(notif.IsRead ? "" : "unread")">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-truncate" style="max-width: 200px;">@notif.Title</span>
+                    <span class="notif-time text-muted">@notif.CreatedAt.ToString("g")</span>
+                </div>
+                <div class="notif-msg text-muted small">@notif.Message</div>
+                @if (!string.IsNullOrEmpty(notif.LinkUrl))
+                {
+                    <div class="mt-1">
+                        <a href="@notif.LinkUrl" class="btn btn-xs btn-link p-0 small notif-mark-read" data-id="@notif.Id">View Details</a>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-3 text-muted">
+            <i class="bi bi-bell-slash fs-4 d-block mb-1"></i>
+            <span class="small">No new notifications</span>
+        </div>
+    }
+</div>

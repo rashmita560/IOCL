@@ -1,0 +1,143 @@
+@model IOCLCommunityHall.Models.Entities.ApplicationUser
+@{
+    ViewData["Title"] = "Edit Employee Account";
+    ViewData["PageTitle"] = "Edit Employee Account";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item\"><a href=\"/SuperAdmin/Users\">User Management</a></li><li class=\"breadcrumb-item active\">Edit</li>";
+    var emp = ViewBag.Employee as IOCLCommunityHall.Models.Entities.Employee;
+    var currentRole = ViewBag.CurrentRole as string ?? "User";
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header">
+                <i class="bi bi-pencil-fill me-2 text-primary"></i>
+                <span class="fw-bold">Edit Employee — <code>@Model.EmployeeId</code></span>
+            </div>
+            <div class="card-body p-4">
+                <form asp-controller="SuperAdmin" asp-action="EditUser" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@Model.Id" />
+
+                    <!-- Employee Identity (read-only ID) -->
+                    <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size:0.75rem;letter-spacing:1px;">
+                        <i class="bi bi-person-badge me-1"></i>Employee Identity
+                    </h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label iocl-form-label">Employee ID</label>
+                            <input type="text" class="form-control iocl-form-control bg-light"
+                                   value="@Model.EmployeeId" readonly disabled />
+                            <div class="form-text text-muted">Cannot be changed after creation.</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label iocl-form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="employeeName" class="form-control iocl-form-control"
+                                   value="@(emp?.EmployeeName ?? Model.FullName)" required />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Department</label>
+                            <input type="text" name="department" class="form-control iocl-form-control"
+                                   value="@(emp?.Department ?? Model.Department)" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Designation</label>
+                            <input type="text" name="designation" class="form-control iocl-form-control"
+                                   value="@(emp?.Designation)" />
+                        </div>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size:0.75rem;letter-spacing:1px;">
+                        <i class="bi bi-envelope me-1"></i>Contact Details
+                    </h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Official Email</label>
+                            <input type="email" name="email" class="form-control iocl-form-control"
+                                   value="@(emp?.Email ?? Model.Email)" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Phone Number</label>
+                            <input type="text" name="phoneNumber" class="form-control iocl-form-control"
+                                   value="@(emp?.PhoneNumber)" maxlength="15" inputmode="numeric" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label iocl-form-label">Quarter / Address</label>
+                        <input type="text" name="quarterAddress" class="form-control iocl-form-control"
+                               value="@(emp?.QuarterAddress)" placeholder="e.g. Block C, Quarter 305" />
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size:0.75rem;letter-spacing:1px;">
+                        <i class="bi bi-shield-lock me-1"></i>Portal Role
+                    </h6>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Assign Role</label>
+                            <select name="role" class="form-select iocl-form-control">
+                                <option value="User" selected="@(currentRole == "User")">User (Employee)</option>
+                                <option value="HOD" selected="@(currentRole == "HOD")">Head of Department (HOD)</option>
+                                <option value="GM" selected="@(currentRole == "GM")">General Manager (GM)</option>
+                                <option value="SuperAdmin" selected="@(currentRole == "SuperAdmin")">Super Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="alert alert-warning border-0 w-100 mb-0 py-2"
+                                 style="background:#fef9ec;border-left:3px solid #d97706 !important;font-size:0.78rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
+                                To reset password, use the <strong>Reset Password</strong> button on the Users list.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-save-fill me-2"></i>Save Changes
+                        </button>
+                        <a href="/SuperAdmin/Users" class="btn btn-light border px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info side -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4" style="border-radius:12px;">
+            <h6 class="fw-bold mb-2"><i class="bi bi-person-circle text-primary me-2"></i>Account Summary</h6>
+            <dl class="row small mb-0">
+                <dt class="col-5 text-muted">Employee ID</dt>
+                <dd class="col-7"><code>@Model.EmployeeId</code></dd>
+                <dt class="col-5 text-muted">Portal Status</dt>
+                <dd class="col-7">
+                    <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                        @(Model.IsActive ? "Active" : "Inactive")
+                    </span>
+                </dd>
+                <dt class="col-5 text-muted">Current Role</dt>
+                <dd class="col-7">
+                    <span class="badge @(currentRole == "SuperAdmin" ? "bg-danger" : "bg-secondary")">
+                        @currentRole
+                    </span>
+                </dd>
+                <dt class="col-5 text-muted">Last Login</dt>
+                <dd class="col-7">
+                    @(Model.LastLoginAt.HasValue ? Model.LastLoginAt.Value.ToLocalTime().ToString("dd MMM yyyy, HH:mm") : "Never logged in")
+                </dd>
+                <dt class="col-5 text-muted">Account Since</dt>
+                <dd class="col-7">@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</dd>
+            </dl>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,38 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Error";
+}
+
+<div class="container text-center py-5" style="margin-top: 100px;">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0 p-5" style="border-top: 5px solid var(--color-danger) !important;">
+                <div class="text-danger mb-4">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 5rem;"></i>
+                </div>
+                <h2 class="fw-bold text-dark">An Error Occurred</h2>
+                <p class="text-muted mt-3">An error occurred while processing your request. Please contact the IT Township Cell if this issue persists.</p>
+                <div class="mt-4 mb-3">
+                    <a href="/" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-house-door-fill me-2"></i>Go to Home
+                    </a>
+                </div>
+                
+                @if (ViewData["ExceptionMessage"] != null && !string.IsNullOrEmpty(ViewData["ExceptionMessage"].ToString()))
+                {
+                    <div class="alert alert-danger mt-4 text-start shadow-sm" style="border-radius: 10px; border-left: 5px solid #dc3545;">
+                        <h5 class="fw-bold text-danger mb-2"><i class="bi bi-bug-fill me-2"></i>Developer Exception Details</h5>
+                        <p class="mb-2"><strong>Message:</strong> <span class="text-dark">@ViewData["ExceptionMessage"]</span></p>
+                        @if (ViewData["StackTrace"] != null && !string.IsNullOrEmpty(ViewData["StackTrace"].ToString()))
+                        {
+                            <div class="mt-3">
+                                <label class="form-label fw-bold text-muted small">Stack Trace:</label>
+                                <pre class="bg-dark text-light p-3 rounded shadow-inner" style="max-height: 300px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; font-size: 0.75rem; white-space: pre-wrap; word-break: break-all;">@ViewData["StackTrace"]</pre>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

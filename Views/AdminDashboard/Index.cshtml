@@ -1,0 +1,217 @@
+@model IOCLCommunityHall.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<!-- Hero Banner -->
+<div class="iocl-hero-banner d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+    <div>
+        <h2>COMMUNITY HALL & INVENTORY TERMINAL</h2>
+        <p>Monitoring bookings, inventory reservations, and compliance logs for Panipat Refinery Township.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="AdminRequest" asp-action="Index" class="iocl-hero-btn iocl-hero-btn-blue">
+            <i class="bi bi-file-earmark-text-fill"></i>Rental Requests
+        </a>
+        <a asp-controller="Inventory" asp-action="Index" class="iocl-hero-btn iocl-hero-btn-purple">
+            <i class="bi bi-boxes"></i>Inventory Items
+        </a>
+        <a asp-controller="Reports" asp-action="Index" class="iocl-hero-btn iocl-hero-btn-dark">
+            <i class="bi bi-bar-chart-line-fill"></i>Reports
+        </a>
+    </div>
+</div>
+
+<!-- KPI Row 1: Requests & Bookings -->
+<div class="row g-3 mb-4">
+    <!-- Total Requests -->
+    <div class="col-6 col-md-3">
+        <div class="card iocl-card iocl-kpi-card p-3">
+            <div class="text-muted small text-uppercase fw-bold">Total Requests</div>
+            <h3 class="fw-bold mb-0 text-dark">@Model.TotalRequests</h3>
+            <i class="bi bi-cart-fill iocl-kpi-icon"></i>
+        </div>
+    </div>
+    <!-- Pending Requests -->
+    <div class="col-6 col-md-3">
+        <div class="card iocl-card iocl-kpi-card kpi-pending p-3">
+            <div class="text-muted small text-uppercase fw-bold">Pending Requests</div>
+            <h3 class="fw-bold mb-0 text-warning">@Model.PendingRequests</h3>
+            <i class="bi bi-hourglass-split iocl-kpi-icon"></i>
+        </div>
+    </div>
+    <!-- Approved Requests -->
+    <div class="col-6 col-md-3">
+        <div class="card iocl-card iocl-kpi-card kpi-approved p-3">
+            <div class="text-muted small text-uppercase fw-bold">Approved Requests</div>
+            <h3 class="fw-bold mb-0 text-success">@Model.ApprovedRequests</h3>
+            <i class="bi bi-check-circle-fill iocl-kpi-icon"></i>
+        </div>
+    </div>
+    <!-- Rejected Requests -->
+    <div class="col-6 col-md-3">
+        <div class="card iocl-card iocl-kpi-card kpi-rejected p-3">
+            <div class="text-muted small text-uppercase fw-bold">Rejected Requests</div>
+            <h3 class="fw-bold mb-0 text-danger">@Model.RejectedRequests</h3>
+            <i class="bi bi-x-circle-fill iocl-kpi-icon"></i>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Row 2: Finance & Inventory -->
+<div class="row g-3 mb-4">
+    <!-- Total Revenue -->
+    <div class="col-6 col-md-4">
+        <div class="card iocl-card iocl-kpi-card kpi-revenue p-3">
+            <div class="text-muted small text-uppercase fw-bold">Total Revenue</div>
+            <h3 class="fw-bold mb-0 text-primary">₹@Model.TotalRevenue.ToString("N2")</h3>
+            <i class="bi bi-currency-rupee iocl-kpi-icon"></i>
+        </div>
+    </div>
+    <!-- Monthly Revenue -->
+    <div class="col-6 col-md-4">
+        <div class="card iocl-card iocl-kpi-card kpi-revenue p-3">
+            <div class="text-muted small text-uppercase fw-bold">Monthly Revenue</div>
+            <h3 class="fw-bold mb-0 text-primary">₹@Model.MonthlyRevenue.ToString("N2")</h3>
+            <i class="bi bi-cash-stack iocl-kpi-icon"></i>
+        </div>
+    </div>
+    <!-- Low Stock Count -->
+    <div class="col-6 col-md-4">
+        <div class="card iocl-card iocl-kpi-card kpi-rejected p-3">
+            <div class="text-muted small text-uppercase fw-bold">Low Stock Items</div>
+            <h3 class="fw-bold mb-0 text-danger">@Model.LowStockItemCount</h3>
+            <i class="bi bi-exclamation-triangle-fill iocl-kpi-icon"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <!-- Revenue Trend -->
+    <div class="col-md-6">
+        <div class="card iocl-card shadow-sm h-100">
+            <div class="card-header iocl-card-header"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Revenue Trend (Last 6 Months)</div>
+            <div class="card-body">
+                <canvas id="revenueChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Booking Volume Trend -->
+    <div class="col-md-6">
+        <div class="card iocl-card shadow-sm h-100">
+            <div class="card-header iocl-card-header"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Booking Volumetric Trend</div>
+            <div class="card-body">
+                <canvas id="bookingsTrendChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Inventory Usage -->
+    <div class="col-md-6">
+        <div class="card iocl-card shadow-sm h-100">
+            <div class="card-header iocl-card-header"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Top 5 Most Rented Items</div>
+            <div class="card-body d-flex justify-content-center">
+                <div style="max-width: 280px; width: 100%;">
+                    <canvas id="topItemsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Inventory Allocation -->
+    <div class="col-md-6">
+        <div class="card iocl-card shadow-sm h-100">
+            <div class="card-header iocl-card-header"><i class="bi bi-donut-chart-fill me-2 text-primary"></i>Total Stock Allocation (Reserved vs Free)</div>
+            <div class="card-body d-flex justify-content-center">
+                <div style="max-width: 280px; width: 100%;">
+                    <canvas id="invAllocationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity & Tables Row -->
+<div class="row g-4">
+    <!-- Recent Requests -->
+    <div class="col-lg-12">
+        <div class="card iocl-card shadow-sm h-100">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2 text-primary"></i>Recent Rental Requests</span>
+                <a asp-controller="AdminRequest" asp-action="Index" class="btn btn-sm btn-outline-primary border-0 fw-bold">Manage All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Req No</th>
+                                <th>Requester</th>
+                                <th>Event Date</th>
+                                <th>Status</th>
+                                <th class="pe-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentRequests != null && Model.RecentRequests.Any())
+                            {
+                                foreach (var req in Model.RecentRequests)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-bold text-primary">#@req.RequestNumber</td>
+                                        <td>
+                                            <div class="fw-bold">@req.User?.FullName</div>
+                                            <span class="text-muted small" style="font-size: 0.75rem;">@req.User?.Department</span>
+                                        </td>
+                                        <td>@req.EventDate.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            @if (req.Status == RequestStatus.Pending)
+                                            {
+                                                <span class="badge badge-pending iocl-badge">
+                                                    @(req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHOD ? "Pending to HOD" : 
+                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingGM ? "Pending to GM" : 
+                                                      req.ApprovalStage == IOCLCommunityHall.Models.Entities.ApprovalStage.PendingHR ? "Pending to HR" : "Pending")
+                                                </span>
+                                            }
+                                            else if (req.Status == RequestStatus.Approved)
+                                            {
+                                                <span class="badge badge-approved iocl-badge">Approved</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-rejected iocl-badge">Rejected</span>
+                                            }
+                                        </td>
+                                        <td class="pe-3 text-end">
+                                            <a asp-controller="AdminRequest" asp-action="Details" asp-route-id="@req.Id" class="btn btn-xs btn-light border"><i class="bi bi-chevron-right"></i></a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="5" class="text-center py-4 text-muted">No recent requests.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Inject Viewbag charts data for scripts.js
+        var monthlyRevenueData = @Html.Raw(ViewBag.MonthlyRevenueJson ?? "[]");
+        var monthlyRevenueLabels = @Html.Raw(ViewBag.MonthlyLabelsJson ?? "[]");
+        var bookingTrendData = @Html.Raw(ViewBag.BookingTrendJson ?? "[]");
+        var bookingTrendLabels = @Html.Raw(ViewBag.BookingLabelsJson ?? "[]");
+        
+        var topItemsData = @Html.Raw(ViewBag.TopItemsJson ?? "[]");
+        var topItemsLabels = @Html.Raw(ViewBag.TopItemsLabelsJson ?? "[]");
+        
+        var invStatusData = @Html.Raw(ViewBag.InvStatusJson ?? "[]");
+        var invStatusLabels = @Html.Raw(ViewBag.InvStatusLabelsJson ?? "[]");
+    </script>
+    <script src="~/js/charts.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,375 @@
+@model IOCLCommunityHall.Models.ViewModels.HallBookingViewModel
+@using IOCLCommunityHall.Models.Entities
+@{
+    ViewData["Title"] = "Book Community Hall";
+    ViewData["PageTitle"] = "Book a Facility";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item\"><a asp-controller=\"HallBooking\" asp-action=\"Index\">Hall Bookings</a></li><li class=\"breadcrumb-item active\">New Booking</li>";
+}
+
+<style>
+    .facility-card {
+        border: 2px solid #e9ecef;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        position: relative;
+        overflow: hidden;
+        background: #fff;
+    }
+    .facility-card:hover {
+        border-color: var(--iocl-blue);
+        box-shadow: 0 8px 24px rgba(0,82,165,0.12);
+        transform: translateY(-2px);
+    }
+    .facility-card.selected {
+        border-color: var(--iocl-blue);
+        background: linear-gradient(135deg, rgba(0,82,165,0.04), rgba(0,82,165,0.01));
+        box-shadow: 0 8px 24px rgba(0,82,165,0.18);
+    }
+    .facility-card input[type=checkbox] { display: none; }
+    .facility-check-indicator {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        border: 2px solid #dee2e6;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px;
+        transition: all 0.2s;
+        background: #fff;
+        flex-shrink: 0;
+    }
+    .facility-card.selected .facility-check-indicator {
+        background: var(--iocl-blue);
+        border-color: var(--iocl-blue);
+        color: #fff;
+    }
+    .facility-type-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border-radius: 20px;
+        padding: 2px 10px;
+    }
+    .facility-icon {
+        width: 54px; height: 54px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+    .price-preview {
+        background: linear-gradient(135deg, #0052a5, #003d7a);
+        border-radius: 16px;
+        color: #fff;
+    }
+    .price-preview .total-amount {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    .availability-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 5px 14px;
+    }
+    #facilityError { display: none; }
+</style>
+
+<div class="row g-4">
+    <!-- ─── Booking Form ───────────────────────────────────────────── -->
+    <div class="col-lg-8">
+        <form asp-action="Create" method="post" id="bookingForm">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" style="display:none"></div>
+
+            <!-- Step 1: Select Facilities -->
+            <div class="card iocl-card shadow-sm mb-4">
+                <div class="card-header iocl-card-header bg-white border-bottom d-flex align-items-center justify-content-between">
+                    <span class="fw-bold text-dark">
+                        <span class="badge bg-primary me-2" style="border-radius:50%;width:24px;height:24px;line-height:14px;">1</span>
+                        Select Facility / Facilities
+                    </span>
+                    <span class="text-muted small">Select one or both</span>
+                </div>
+                <div class="card-body p-4">
+                    <div id="facilityError" class="alert alert-danger small py-2">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Please select at least one facility.
+                    </div>
+                    <div class="row g-3" id="facilityCards">
+                        @foreach (var f in Model.AvailableFacilities)
+                        {
+                            var icon = f.FacilityType == FacilityType.MainHall ? "bi-building-fill" :
+                                       f.FacilityType == FacilityType.DiningHall ? "bi-cup-hot-fill" :
+                                       f.FacilityType == FacilityType.OpenGround ? "bi-tree-fill" :
+                                       f.FacilityType == FacilityType.ConferenceHall ? "bi-briefcase-fill" :
+                                       f.FacilityType == FacilityType.MeetingRoom ? "bi-people-fill" : "bi-geo-fill";
+                            var iconBg = f.FacilityType == FacilityType.MainHall ? "#EBF3FF" :
+                                         f.FacilityType == FacilityType.DiningHall ? "#FFF3EB" :
+                                         f.FacilityType == FacilityType.OpenGround ? "#EDFBF3" : "#F3EBFF";
+                            var iconColor = f.FacilityType == FacilityType.MainHall ? "#0052a5" :
+                                            f.FacilityType == FacilityType.DiningHall ? "#d4640a" :
+                                            f.FacilityType == FacilityType.OpenGround ? "#0a7a3a" : "#6f0ad4";
+                            <div class="col-md-6">
+                                <label class="facility-card p-4 d-block w-100 @(Model.SelectedFacilityIds.Contains(f.Id) ? "selected" : "")"
+                                       data-id="@f.Id" data-rate="@f.RentalRatePerDay" data-name="@f.Name">
+                                    <input type="checkbox" name="SelectedFacilityIds" value="@f.Id"
+                                           @(Model.SelectedFacilityIds.Contains(f.Id) ? "checked" : "") />
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="facility-icon" style="background:@iconBg; color:@iconColor;">
+                                            <i class="bi @icon"></i>
+                                        </div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                <h6 class="fw-bold mb-0 text-dark">@f.Name</h6>
+                                                <div class="facility-check-indicator">
+                                                    <i class="bi bi-check2-all"></i>
+                                                </div>
+                                            </div>
+                                            <span class="facility-type-badge bg-light text-muted mb-2 d-inline-block">
+                                                @f.FacilityType.ToString()
+                                            </span>
+                                            <p class="text-muted small mb-2" style="line-height:1.4;">@f.Description</p>
+                                            <div class="d-flex gap-3 small text-muted flex-wrap">
+                                                <span><i class="bi bi-people-fill me-1"></i>Capacity: <strong>@f.Capacity</strong></span>
+                                                <span><i class="bi bi-cash-stack me-1 text-success"></i><strong class="text-success">₹@f.RentalRatePerDay.ToString("N0")</strong>/day</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(f.Facilities))
+                                            {
+                                                <div class="mt-2">
+                                                    @foreach (var amenity in f.Facilities.Split(',').Take(3))
+                                                    {
+                                                        <span class="badge bg-light text-secondary border me-1 fw-normal" style="font-size:0.7rem;">@amenity.Trim()</span>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Event Details -->
+            <div class="card iocl-card shadow-sm mb-4">
+                <div class="card-header iocl-card-header bg-white border-bottom">
+                    <span class="fw-bold text-dark">
+                        <span class="badge bg-primary me-2" style="border-radius:50%;width:24px;height:24px;line-height:14px;">2</span>
+                        Event Details
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label asp-for="EventName" class="form-label iocl-form-label"></label>
+                            <input asp-for="EventName" class="form-control iocl-form-control"
+                                   placeholder="e.g. Annual General Body Meeting, Birthday Gathering" />
+                            <span asp-validation-for="EventName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EventType" class="form-label iocl-form-label"></label>
+                            <select asp-for="EventType" class="form-select iocl-form-control"
+                                    asp-items="Html.GetEnumSelectList<IOCLCommunityHall.Models.Entities.EventType>()">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="EventDate" class="form-label iocl-form-label"></label>
+                            <input asp-for="EventDate" type="date" id="eventDate" class="form-control iocl-form-control"
+                                   min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="EventDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="StartTime" class="form-label iocl-form-label"></label>
+                            <input asp-for="StartTime" type="time" id="startTime" class="form-control iocl-form-control" value="09:00" />
+                            <span asp-validation-for="StartTime" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EndTime" class="form-label iocl-form-label"></label>
+                            <input asp-for="EndTime" type="time" id="endTime" class="form-control iocl-form-control" value="22:00" />
+                            <span asp-validation-for="EndTime" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ExpectedAttendees" class="form-label iocl-form-label"></label>
+                            <input asp-for="ExpectedAttendees" type="number" class="form-control iocl-form-control"
+                                   min="1" placeholder="e.g. 150" />
+                            <span asp-validation-for="ExpectedAttendees" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Remarks" class="form-label iocl-form-label"></label>
+                        <textarea asp-for="Remarks" class="form-control iocl-form-control" rows="2"
+                                  placeholder="Special requirements: sound setup duration, catering arrangement, decoration notes…"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Availability Check Banner -->
+            <div class="alert py-2 px-3 mb-4 d-flex align-items-center justify-content-between" id="availabilityAlert" style="display:none!important;">
+                <div class="small d-flex align-items-center gap-2">
+                    <span class="spinner-border spinner-border-sm d-none" id="availSpinner"></span>
+                    <i class="bi bi-info-circle-fill" id="alertIcon"></i>
+                    <span id="availabilityText">Select facilities and enter dates to check availability.</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary border-0 fw-bold" id="btnCheckAvailability">
+                    <i class="bi bi-search me-1"></i>Check
+                </button>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <a asp-action="Index" class="btn btn-light border px-4">
+                    <i class="bi bi-arrow-left me-1"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-primary px-5 py-2 fw-bold" id="btnSubmitBooking">
+                    <i class="bi bi-calendar-check-fill me-2"></i>Submit Booking Request
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ─── Right Sidebar: Price Preview + Rules ──────────────────── -->
+    <div class="col-lg-4">
+        <!-- Price Preview -->
+        <div class="price-preview p-4 mb-4">
+            <div class="text-white-50 small mb-1 fw-semibold text-uppercase" style="letter-spacing:1px;">Estimated Total</div>
+            <div class="total-amount" id="totalPreview">₹0</div>
+            <div class="text-white-50 small mt-1" id="selectedFacilityNames">No facilities selected</div>
+            <hr class="border-white-50 my-3">
+            <div class="small text-white-50">
+                <i class="bi bi-info-circle me-1"></i>
+                Rate is per day. Final amount confirmed after Admin approval.
+            </div>
+        </div>
+
+        <!-- Availability Result -->
+        <div class="card border-0 shadow-sm mb-4" id="availResultCard" style="display:none;">
+            <div class="card-body py-3 px-4" id="availResultBody"></div>
+        </div>
+
+        <!-- Booking Rules -->
+        <div class="card iocl-card shadow-sm border-0 p-4">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="bi bi-clipboard-check text-primary me-2"></i>Booking Guidelines
+            </h6>
+            <ol class="small text-muted ps-3 mb-0" style="line-height: 1.7;">
+                <li class="mb-1"><strong>First-Come, First-Served:</strong> Priority by submission timestamp.</li>
+                <li class="mb-1"><strong>Slot Policy:</strong> Bookings allowed 08:00–22:00 hrs.</li>
+                <li class="mb-1"><strong>Combined Booking:</strong> Book Main Hall + Dining Hall together for events requiring catering.</li>
+                <li class="mb-1"><strong>Pricing:</strong> Combined bookings are charged at sum of individual facility rates.</li>
+                <li class="mb-1"><strong>Approval:</strong> Requests go to Township Administration for approval.</li>
+                <li class="mb-0"><strong>Cancellation:</strong> Notify IT Township Cell at least 48 hrs before event.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+$(document).ready(function () {
+    var facilityRates = {};
+    var facilityNames = {};
+
+    // Collect facility data from cards
+    $('#facilityCards .facility-card').each(function () {
+        var id = $(this).data('id');
+        facilityRates[id] = parseFloat($(this).data('rate')) || 0;
+        facilityNames[id] = $(this).data('name');
+    });
+
+    // Toggle selection on card click
+    $('#facilityCards .facility-card').on('click', function () {
+        var $card = $(this);
+        var $cb = $card.find('input[type=checkbox]');
+        $cb.prop('checked', !$cb.prop('checked'));
+        $card.toggleClass('selected', $cb.prop('checked'));
+        updateTotal();
+        triggerAvailCheck();
+    });
+
+    function getSelectedIds() {
+        var ids = [];
+        $('input[name=SelectedFacilityIds]:checked').each(function () {
+            ids.push($(this).val());
+        });
+        return ids;
+    }
+
+    function updateTotal() {
+        var ids = getSelectedIds();
+        var total = 0;
+        var names = [];
+        ids.forEach(function (id) {
+            total += facilityRates[id] || 0;
+            names.push(facilityNames[id] || '');
+        });
+        $('#totalPreview').text('₹' + total.toLocaleString('en-IN'));
+        $('#selectedFacilityNames').text(names.length > 0 ? names.join(' + ') : 'No facilities selected');
+        $('#facilityError').toggle(ids.length === 0 && $('#bookingForm').hasClass('was-validated'));
+    }
+
+    function triggerAvailCheck() {
+        var ids = getSelectedIds();
+        var date = $('#eventDate').val();
+        var start = $('#startTime').val();
+        var end = $('#endTime').val();
+        if (ids.length === 0 || !date || !start || !end) {
+            $('#availResultCard').hide();
+            return;
+        }
+        checkAvailability(ids, date, start, end);
+    }
+
+    function checkAvailability(ids, date, start, end) {
+        $('#availSpinner').removeClass('d-none');
+        $('#availResultCard').hide();
+        $.ajax({
+            url: '/HallBooking/CheckAvailability',
+            type: 'GET',
+            data: { facilityIds: ids.join(','), date: date, startTime: start, endTime: end },
+            success: function (r) {
+                $('#availSpinner').addClass('d-none');
+                $('#availResultCard').show();
+                if (r.available) {
+                    $('#availResultBody').html('<span class="availability-badge bg-success-subtle text-success"><i class="bi bi-check-circle-fill"></i>All selected facilities are available!</span>');
+                    $('#btnSubmitBooking').prop('disabled', false);
+                } else {
+                    $('#availResultBody').html('<span class="availability-badge bg-danger-subtle text-danger"><i class="bi bi-x-circle-fill"></i>' + (r.conflict || 'A facility') + ' is not available for the selected slot.</span>');
+                    $('#btnSubmitBooking').prop('disabled', true);
+                }
+            },
+            error: function () {
+                $('#availSpinner').addClass('d-none');
+                $('#availResultCard').show();
+                $('#availResultBody').html('<span class="text-muted small"><i class="bi bi-exclamation-circle me-1"></i>Could not verify availability. You may still submit.</span>');
+                $('#btnSubmitBooking').prop('disabled', false);
+            }
+        });
+    }
+
+    $('#eventDate, #startTime, #endTime').on('change', function () { triggerAvailCheck(); });
+    $('#btnCheckAvailability').on('click', function (e) { e.preventDefault(); triggerAvailCheck(); });
+
+    // Form submit validation
+    $('#bookingForm').on('submit', function (e) {
+        if (getSelectedIds().length === 0) {
+            e.preventDefault();
+            $('#facilityError').show();
+            $('html, body').animate({ scrollTop: $('#facilityCards').offset().top - 100 }, 300);
+        }
+    });
+
+    // Initialize total on load
+    updateTotal();
+    triggerAvailCheck();
+});
+</script>
+}

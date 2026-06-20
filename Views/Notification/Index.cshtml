@@ -1,0 +1,71 @@
+@model IEnumerable<IOCLCommunityHall.Models.Entities.Notification>
+@{
+    ViewData["Title"] = "My Notification Center";
+}
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bell-fill me-2 text-primary"></i>My Notification Log</span>
+                <form asp-action="MarkAllRead" method="post" class="mb-0">
+                    <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-check-all me-1"></i>Mark All As Read</button>
+                </form>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var notif in Model)
+                        {
+                            <div class="list-group-item px-4 py-3 notif-item @(notif.IsRead ? "" : "unread")" style="transition: background-color 0.2s;">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">
+                                            @if (notif.NotificationType == NotificationType.Info)
+                                            {
+                                                <i class="bi bi-info-circle text-info me-2"></i>
+                                            }
+                                            else if (notif.NotificationType == NotificationType.Success)
+                                            {
+                                                <i class="bi bi-check-circle text-success me-2"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                                            }
+                                            @notif.Title
+                                        </h6>
+                                        <p class="mb-0 text-muted small">@notif.Message</p>
+                                    </div>
+                                    <span class="text-muted small text-nowrap" style="font-size:0.75rem;">@notif.CreatedAt.ToLocalTime().ToString("g")</span>
+                                </div>
+                                <div class="mt-2 d-flex gap-2">
+                                    @if (!string.IsNullOrEmpty(notif.LinkUrl))
+                                    {
+                                        <a href="@notif.LinkUrl" class="btn btn-xs btn-outline-iocl-blue px-2 py-0.5 small notif-mark-read" data-id="@notif.Id">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>View Details
+                                        </a>
+                                    }
+                                    @if (!notif.IsRead)
+                                    {
+                                        <button type="button" class="btn btn-xs btn-light border px-2 py-0.5 small notif-mark-read" data-id="@notif.Id">
+                                            Mark Read
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-bell-slash fs-1 d-block mb-2 text-muted"></i>
+                            You have no notifications in your history log.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

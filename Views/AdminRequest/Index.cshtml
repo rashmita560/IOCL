@@ -1,0 +1,165 @@
+@model IEnumerable<IOCLCommunityHall.Models.Entities.RentalRequest>
+@using IOCLCommunityHall.Models.Entities
+@{
+    ViewData["Title"] = "Rental Request Approvals";
+    var fcfsQueue = ViewBag.FCFSQueue as IEnumerable<IOCLCommunityHall.Models.Entities.RentalRequest>;
+    var currentRole = ViewBag.CurrentRole as string ?? "SuperAdmin";
+    var roleLabel = currentRole == "HOD" ? "HOD Approvals" : currentRole == "GM" ? "GM Approvals" : "All Rental Requests";
+    string StageBadge(ApprovalStage s) => s switch {
+        ApprovalStage.PendingHOD => "<span class=\"badge bg-warning-subtle text-warning border border-warning-subtle\">Pending HOD</span>",
+        ApprovalStage.PendingGM  => "<span class=\"badge bg-info-subtle text-info border border-info-subtle\">Pending GM</span>",
+        ApprovalStage.PendingHR  => "<span class=\"badge bg-primary-subtle text-primary border border-primary-subtle\">Pending HR</span>",
+        ApprovalStage.Approved   => "<span class=\"badge badge-approved iocl-badge\">Approved</span>",
+        ApprovalStage.Rejected   => "<span class=\"badge badge-rejected iocl-badge\">Rejected</span>",
+        _ => s.ToString()
+    };
+}
+
+<!-- FCFS Queue Sidebar + Main List Layout -->
+<div class="row">
+    <!-- Main Request List (Left) -->
+    <div class="col-lg-8">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-card-checklist me-2 text-primary"></i>@roleLabel</span>
+                @if (currentRole != "SuperAdmin") {
+                    <span class="badge bg-secondary ms-2" style="font-size:0.75rem;">Showing requests assigned to your stage</span>
+                }
+            </div>
+            <div class="card-body">
+                <!-- Search & Filters -->
+                <form method="get" class="row g-3 mb-4">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control iocl-form-control" placeholder="Search by number, event, name..." value="@ViewBag.Search" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="statusFilter" class="form-select iocl-form-control">
+                            <option value="All">All Statuses</option>
+                            @foreach (var val in new[] { RequestStatus.Pending, RequestStatus.Approved, RequestStatus.Rejected })
+                            {
+                                <option value="@val" selected="@(ViewBag.StatusFilter == val.ToString())">@val.ToString()</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-iocl-blue w-100">Apply Filter</button>
+                    </div>
+                </form>
+
+                <!-- Requests Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Employee / Dept</th>
+                                <th>Event Date</th>
+                                <th>Grand Total</th>
+                                <th>Stage</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var req in Model)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-primary">#@req.RequestNumber</td>
+                                        <td>
+                                            <div class="fw-bold text-dark">@req.User?.FullName</div>
+                                            <span class="text-muted small">@req.User?.Department</span>
+                                            @if (!string.IsNullOrEmpty(req.SubmittedByRole) && req.SubmittedByRole != "User") {
+                                                <span class="badge bg-secondary-subtle text-secondary" style="font-size:0.7rem;">@req.SubmittedByRole</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">@req.EventDate.ToString("dd MMM yyyy")</div>
+                                            <span class="text-muted small" style="font-size:0.75rem;">@req.StartDate.ToString("dd/MM") to @req.EndDate.ToString("dd/MM")</span>
+                                        </td>
+                                        <td class="fw-bold">₹@req.GrandTotal</td>
+                                        <td>@Html.Raw(StageBadge(req.ApprovalStage))</td>
+                                        <td>
+                                            @if (req.Status == RequestStatus.Pending)
+                                            {
+                                                <span class="badge badge-pending iocl-badge">
+                                                    @(req.ApprovalStage == ApprovalStage.PendingHOD ? "Pending to HOD" : 
+                                                      req.ApprovalStage == ApprovalStage.PendingGM ? "Pending to GM" : 
+                                                      req.ApprovalStage == ApprovalStage.PendingHR ? "Pending to HR" : "Pending")
+                                                </span>
+                                            }
+                                            else if (req.Status == RequestStatus.Approved)
+                                            {
+                                                <span class="badge badge-approved iocl-badge">Approved</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-rejected iocl-badge">Rejected</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <a asp-action="Details" asp-route-id="@req.Id" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-clipboard-check"></i> Review
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">No matching rental requests found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FCFS Queue Priority Panel (Right) -->
+    <div class="col-lg-4">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header text-white" style="background-color: var(--iocl-orange);">
+                <span><i class="bi bi-clock-history me-2"></i>FCFS Queue (Pending priority)</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="p-3 border-bottom text-muted small bg-light">
+                    Requests sorted by absolute timestamp. Processing earlier requests guarantees fair allocation.
+                </div>
+                <ul class="list-group list-group-flush">
+                    @if (fcfsQueue != null && fcfsQueue.Any())
+                    {
+                        var rank = 1;
+                        foreach (var req in fcfsQueue)
+                        {
+                            <li class="list-group-item px-3 py-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 25px; height: 25px;">@rank</span>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">#@req.RequestNumber</h6>
+                                        <span class="text-muted small">@req.User?.FullName · @req.EventDate.ToString("dd MMM")</span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="small text-muted block">Submitted</span>
+                                    <div class="fw-bold small">@req.CreatedAt.ToString("HH:mm:ss.fff")</div>
+                                </div>
+                            </li>
+                            rank += 1;
+                        }
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-center text-muted py-4">FCFS queue is currently empty.</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

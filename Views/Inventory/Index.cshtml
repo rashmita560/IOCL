@@ -1,0 +1,111 @@
+@model IEnumerable<IOCLCommunityHall.Models.Entities.InventoryItem>
+@{
+    ViewData["Title"] = "Inventory Stock Management";
+    var categories = ViewBag.Categories as IEnumerable<IOCLCommunityHall.Models.Entities.InventoryCategory>;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-box-seam-fill me-2 text-primary"></i>Township Rental Inventory Stock</span>
+                <a asp-action="Create" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Inventory Item</a>
+            </div>
+            <div class="card-body">
+                <!-- Search & Filters -->
+                <form method="get" class="row g-3 mb-4">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control iocl-form-control" placeholder="Search by item name..." value="@ViewBag.Search" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="categoryId" class="form-select iocl-form-control">
+                            <option value="">All Categories</option>
+                            @if (categories != null)
+                            {
+                                foreach (var cat in categories)
+                                {
+                                    <option value="@cat.Id" selected="@(ViewBag.CategoryFilter = cat.Id)">@cat.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-iocl-blue w-100">Search</button>
+                    </div>
+                </form>
+
+                <!-- Inventory Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">ID</th>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th class="text-center">Total Qty</th>
+                                <th class="text-center">Reserved</th>
+                                <th class="text-center">Available</th>
+                                <th class="text-end">Rent (Daily)</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end pe-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="ps-3">#@item.Id</td>
+                                        <td class="fw-bold text-dark">@item.Name</td>
+                                        <td>@item.Category?.Name</td>
+                                        <td class="text-center">@item.TotalQuantity</td>
+                                        <td class="text-center">@item.ReservedQuantity</td>
+                                        <td class="text-center">
+                                            @if (item.AvailableQuantity <= 10)
+                                            {
+                                                <span class="badge bg-danger">@item.AvailableQuantity @item.UnitType</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">@item.AvailableQuantity @item.UnitType</span>
+                                            }
+                                        </td>
+                                        <td class="text-end fw-bold text-primary">₹@item.CurrentPrice.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">
+                                                @(item.IsActive ? "Active" : "Inactive")
+                                            </span>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <div class="d-inline-flex gap-1">
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-pencil-square"></i> Edit
+                                                </a>
+                                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Are you sure you want to deactivate/soft-delete this item?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i> Deactivate
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">No inventory items found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

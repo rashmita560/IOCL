@@ -1,0 +1,181 @@
+@model IEnumerable<IOCLCommunityHall.Models.Entities.RentalRequest>
+@{
+    ViewData["Title"] = "My Rental Requests";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-stars me-2 text-primary"></i>My Rental Requests</span>
+                <a asp-action="Create" class="btn btn-sm btn-primary"><i class="bi bi-cart-plus-fill me-1"></i>New Request</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Request No.</th>
+
+                                <th>Required From</th>
+                                <th>Required Until</th>
+                                <th>Total Cost</th>
+                                <th>Status</th>
+                                <th>Submitted On</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var req in Model)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-primary">#@req.RequestNumber</td>
+                                        <td>@req.StartDate.ToString("dd MMM yyyy")</td>
+                                        <td>@req.EndDate.ToString("dd MMM yyyy")</td>
+                                        <td class="fw-bold">₹@req.GrandTotal</td>
+                                        <td>
+                                            @if (req.Status == RequestStatus.Pending)
+                                            {
+                                                <span class="badge badge-pending iocl-badge">
+                                                    @(req.ApprovalStage == ApprovalStage.PendingHOD ? "Pending to HOD" : 
+                                                      req.ApprovalStage == ApprovalStage.PendingGM ? "Pending to GM" : 
+                                                      req.ApprovalStage == ApprovalStage.PendingHR ? "Pending to HR" : "Pending")
+                                                </span>
+                                            }
+                                            else if (req.Status == RequestStatus.Approved)
+                                            {
+                                                <span class="badge badge-approved iocl-badge">Approved</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-rejected iocl-badge" data-bs-toggle="tooltip" title="@req.RejectionReason">Rejected</span>
+                                                @if (!string.IsNullOrEmpty(req.RejectionReason))
+                                                {
+                                                    <div class="small text-danger" style="font-size: 0.75rem; max-width: 150px;">Reason: @req.RejectionReason</div>
+                                                }
+                                            }
+                                        </td>
+                                        <td class="text-muted small">@req.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                        <td class="text-end pe-4">
+                                            <!-- Button Trigger Details Modal or Action -->
+                                            <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-@req.Id">
+                                                <i class="bi bi-eye-fill"></i> View Items
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-5">
+                                        <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
+                                        You have not made any rental requests yet.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    foreach (var req in Model)
+    {
+        <!-- Details Modal (Rendered outside the table to prevent flickering/blinking issues) -->
+        <div class="modal fade" id="modal-@req.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg text-start">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Request details - #@req.RequestNumber</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-12">
+                                <span class="text-muted small me-2">STATUS:</span>
+                                @if (req.Status == RequestStatus.Pending)
+                                {
+                                    <span class="badge badge-pending iocl-badge">
+                                        @(req.ApprovalStage == ApprovalStage.PendingHOD ? "Pending to HOD" : 
+                                          req.ApprovalStage == ApprovalStage.PendingGM ? "Pending to GM" : 
+                                          req.ApprovalStage == ApprovalStage.PendingHR ? "Pending to HR" : "Pending")
+                                    </span>
+                                }
+                                else if (req.Status == RequestStatus.Approved)
+                                {
+                                    <span class="badge badge-approved iocl-badge">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-rejected iocl-badge">Rejected</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED FROM</div>
+                                <div class="fw-bold">@req.StartDate.ToString("dd/MM/yyyy")</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-muted small">REQUIRED UNTIL</div>
+                                <div class="fw-bold">@req.EndDate.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(req.InPrincipalDocumentPath))
+                        {
+                            <div class="mb-3">
+                                <div class="text-muted small">IN-PRINCIPAL APPROVAL DOCUMENT</div>
+                                <div class="mt-1">
+                                    <a href="@req.InPrincipalDocumentPath" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>View Uploaded Document
+                                    </a>
+                                </div>
+                            </div>
+                        }
+
+                        <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-box-seam-fill me-1"></i>Requested Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty Requested</th>
+                                    <th class="text-center">Qty Allocated</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in req.RentalRequestItems)
+                                {
+                                    <tr>
+                                        <td>@item.InventoryItem?.Name</td>
+                                        <td class="text-end">₹@item.UnitPriceAtRequest</td>
+                                        <td class="text-center">@item.RequestedQuantity</td>
+                                        <td class="text-center">@item.AllocatedQuantity</td>
+                                        <td class="text-end fw-bold">₹@((item.RequestedQuantity * item.UnitPriceAtRequest).ToString("F2"))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        <div class="text-end mt-3">
+                            <h5 class="fw-bold">Grand Total: <span style="color: var(--iocl-orange);">₹@req.GrandTotal</span></h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

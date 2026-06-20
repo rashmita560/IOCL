@@ -1,0 +1,192 @@
+@{
+    ViewData["Title"] = "Add Employee Account";
+    ViewData["PageTitle"] = "Add Employee Account";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item\"><a href=\"/SuperAdmin/Users\">User Management</a></li><li class=\"breadcrumb-item active\">Add Employee</li>";
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger border-0 mb-3" style="border-left:4px solid #dc2626 !important;">
+        <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header">
+                <i class="bi bi-person-plus-fill me-2 text-primary"></i>
+                <span class="fw-bold">New Employee Account</span>
+            </div>
+            <div class="card-body p-4">
+                <form asp-controller="SuperAdmin" asp-action="CreateUser" method="post" id="createUserForm" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <!-- Employee Identity -->
+                    <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size:0.75rem;letter-spacing:1px;">
+                        <i class="bi bi-person-badge me-1"></i>Employee Identity
+                    </h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label iocl-form-label">
+                                Employee ID <span class="text-danger">*</span>
+                                <small class="text-muted fw-normal">(8 digits)</small>
+                            </label>
+                            <input type="text" name="employeeId" id="employeeId"
+                                   class="form-control iocl-form-control"
+                                   placeholder="e.g. 12345678"
+                                   maxlength="8" inputmode="numeric"
+                                   pattern="[0-9]{8}" required />
+                            <div class="invalid-feedback">Must be exactly 8 numeric digits.</div>
+                            <div class="form-text text-muted">Unique 8-digit employee number from HRMS.</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label iocl-form-label">
+                                Full Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="employeeName" class="form-control iocl-form-control"
+                                   placeholder="As per employment record" required />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Department</label>
+                            <input type="text" name="department" class="form-control iocl-form-control"
+                                   placeholder="e.g. Refinery Operations" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Designation</label>
+                            <input type="text" name="designation" class="form-control iocl-form-control"
+                                   placeholder="e.g. Senior Engineer" />
+                        </div>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <!-- Contact & Address -->
+                    <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size:0.75rem;letter-spacing:1px;">
+                        <i class="bi bi-envelope me-1"></i>Contact Details
+                    </h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Official Email</label>
+                            <input type="email" name="email" class="form-control iocl-form-control"
+                                   placeholder="firstname.lastname@iocl.co.in" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">Phone Number</label>
+                            <input type="text" name="phoneNumber" class="form-control iocl-form-control"
+                                   placeholder="10-digit mobile number" maxlength="15" inputmode="numeric" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label iocl-form-label">Quarter / Address</label>
+                        <input type="text" name="quarterAddress" class="form-control iocl-form-control"
+                               placeholder="e.g. Block C, Quarter 305" />
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <!-- Access & Security -->
+                    <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size:0.75rem;letter-spacing:1px;">
+                        <i class="bi bi-shield-lock me-1"></i>Access & Security
+                    </h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">
+                                Portal Role <span class="text-danger">*</span>
+                            </label>
+                            <select name="role" class="form-select iocl-form-control" required>
+                                <option value="User" selected>User (Employee)</option>
+                                <option value="HOD">Head of Department (HOD)</option>
+                                <option value="GM">General Manager (GM)</option>
+                                <option value="SuperAdmin">Super Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label iocl-form-label">
+                                Initial Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="password" name="password" id="pwd"
+                                       class="form-control iocl-form-control"
+                                       placeholder="Min 6 characters" minlength="6" required
+                                       autocomplete="new-password" />
+                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                        onclick="togglePwd()" tabindex="-1">
+                                    <i class="bi bi-eye" id="pwdEye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-muted">
+                                Employee must change this on first login.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info box -->
+                    <div class="alert alert-info border-0 mb-4" style="background:#eff6ff;border-left:4px solid #2563eb !important;font-size:0.82rem;">
+                        <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+                        The employee will login using their <strong>8-digit Employee ID</strong> and the password set above.
+                        No self-registration is allowed; only Super Admins can create accounts.
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-person-plus-fill me-2"></i>Create Account
+                        </button>
+                        <a href="/SuperAdmin/Users" class="btn btn-light border px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Side note card -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4" style="border-left:4px solid #003399 !important;border-radius:12px;">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle-fill text-primary me-2"></i>Account Rules</h6>
+            <ul class="small text-muted mb-0 ps-3">
+                <li class="mb-2">Employee ID must be exactly <strong>8 numeric digits</strong> matching the HRMS record.</li>
+                <li class="mb-2">Each Employee ID can only have <strong>one</strong> portal account.</li>
+                <li class="mb-2">Only <strong>Super Admins</strong> can create, edit, or deactivate accounts.</li>
+                <li class="mb-2">Passwords are stored as <strong>secure hashes</strong> — never plain text.</li>
+                <li>Role can be changed later from the User Management table.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Strip non-digits from EmployeeId as user types
+    document.getElementById('employeeId').addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 8);
+    });
+
+    // Form validation
+    document.getElementById('createUserForm').addEventListener('submit', function (e) {
+        const eid = document.getElementById('employeeId').value;
+        if (eid.length !== 8 || !/^\d{8}$/.test(eid)) {
+            e.preventDefault();
+            const el = document.getElementById('employeeId');
+            el.classList.add('is-invalid');
+            el.focus();
+        }
+    });
+
+    function togglePwd() {
+        const pwd = document.getElementById('pwd');
+        const eye = document.getElementById('pwdEye');
+        if (pwd.type === 'password') {
+            pwd.type = 'text';
+            eye.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            pwd.type = 'password';
+            eye.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    }
+</script>

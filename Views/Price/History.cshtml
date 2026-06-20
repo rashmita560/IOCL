@@ -1,0 +1,92 @@
+@model IEnumerable<IOCLCommunityHall.Models.Entities.PriceHistory>
+@{
+    ViewData["Title"] = "Price Change Audit Logs";
+    var allItems = ViewBag.AllItems as IEnumerable<IOCLCommunityHall.Models.Entities.InventoryItem>;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-text me-2 text-primary"></i>Permanent Pricing Audit Archive - @ViewBag.ItemName</span>
+                <a asp-action="Index" class="btn btn-sm btn-light border"><i class="bi bi-arrow-left"></i> Back to Pricing</a>
+            </div>
+            <div class="card-body">
+                <!-- Filter by Item Dropdown -->
+                <form method="get" class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label iocl-form-label mb-0 text-nowrap">Filter Item:</label>
+                            <select name="itemId" class="form-select iocl-form-control" onchange="this.form.submit()">
+                                <option value="">-- All Items --</option>
+                                @if (allItems != null)
+                                {
+                                    foreach (var item in allItems)
+                                    {
+                                        <option value="@item.Id" selected="@(ViewBag.SelectedItem = item.Id)">@item.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- History Table -->
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Timestamp</th>
+                                <th>Item Name</th>
+                                <th class="text-end">Old Price</th>
+                                <th class="text-end">New Price</th>
+                                <th class="text-center">Difference</th>
+                                <th>Reason for Change</th>
+                                <th class="pe-3">Updated By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var h in Model)
+                                {
+                                    var diff = h.UpdatedPrice - h.PreviousPrice;
+                                    var percent = h.PreviousPrice > 0 ? (diff / h.PreviousPrice) * 100 : 0;
+                                    <tr>
+                                        <td class="ps-3 text-muted small">@h.EffectiveDate.ToString("dd MMM yyyy HH:mm")</td>
+                                        <td class="fw-bold text-dark">@h.InventoryItem?.Name</td>
+                                        <td class="text-end text-muted">₹@h.PreviousPrice.ToString("F2")</td>
+                                        <td class="text-end fw-bold text-primary">₹@h.UpdatedPrice.ToString("F2")</td>
+                                        <td class="text-center">
+                                            @if (diff > 0)
+                                            {
+                                                <span class="text-danger fw-bold"><i class="bi bi-caret-up-fill me-1"></i>+₹@diff.ToString("F2") (+@percent.ToString("F1")%)</span>
+                                            }
+                                            else if (diff < 0)
+                                            {
+                                                <span class="text-success fw-bold"><i class="bi bi-caret-down-fill me-1"></i>-₹@Math.Abs(diff).ToString("F2") (-@Math.Abs(percent).ToString("F1")%)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fw-bold">No Change</span>
+                                            }
+                                        </td>
+                                        <td><span class="small">@h.Reason</span></td>
+                                        <td class="pe-3 fw-bold text-muted">@h.ModifiedBy</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">No price change logs found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

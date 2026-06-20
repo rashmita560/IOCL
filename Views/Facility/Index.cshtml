@@ -1,0 +1,139 @@
+@model IEnumerable<IOCLCommunityHall.Models.Entities.CommunityHall>
+@using IOCLCommunityHall.Models.Entities
+@{
+    ViewData["Title"] = "Facility Management";
+    ViewData["PageTitle"] = "Facility Management";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item active\">Facilities</li>";
+    ViewData["HeaderAction"] = "<a href=\"/Facility/Create\" class=\"btn btn-primary\"><i class=\"bi bi-plus-circle-fill me-2\"></i>Add New Facility</a>";
+}
+
+<style>
+    .facility-row-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+    }
+    .status-dot {
+        width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;
+    }
+</style>
+
+<div class="card iocl-card shadow-sm">
+    <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
+        <span class="fw-bold text-dark">
+            <i class="bi bi-buildings me-2 text-primary"></i>All Bookable Facilities
+        </span>
+        <a href="/Facility/Create" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-circle-fill me-1"></i>Add Facility
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">#</th>
+                        <th>Facility</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th class="text-center">Capacity</th>
+                        <th class="text-end">Rate / Day</th>
+                        <th class="text-center">Display Order</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Active</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var f in Model.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name))
+                        {
+                            var iconClass = f.FacilityType == FacilityType.MainHall ? "bi-building-fill" :
+                                            f.FacilityType == FacilityType.DiningHall ? "bi-cup-hot-fill" :
+                                            f.FacilityType == FacilityType.OpenGround ? "bi-tree-fill" :
+                                            f.FacilityType == FacilityType.ConferenceHall ? "bi-briefcase-fill" :
+                                            f.FacilityType == FacilityType.MeetingRoom ? "bi-people-fill" : "bi-geo-fill";
+                            var iconBg = f.FacilityType == FacilityType.MainHall ? "#EBF3FF" :
+                                         f.FacilityType == FacilityType.DiningHall ? "#FFF3EB" :
+                                         f.FacilityType == FacilityType.OpenGround ? "#EDFBF3" : "#F3EBFF";
+                            var iconColor = f.FacilityType == FacilityType.MainHall ? "#0052a5" :
+                                            f.FacilityType == FacilityType.DiningHall ? "#d4640a" :
+                                            f.FacilityType == FacilityType.OpenGround ? "#0a7a3a" : "#6f0ad4";
+                            <tr class="@(!f.IsActive ? "opacity-50" : "")">
+                                <td class="ps-4 text-muted fw-semibold">@f.Id</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="facility-row-icon" style="background:@iconBg; color:@iconColor;">
+                                            <i class="bi @iconClass"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@f.Name</div>
+                                            <div class="text-muted small text-truncate" style="max-width:220px;">@f.Description</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border fw-normal">@f.FacilityType.ToString()</span>
+                                </td>
+                                <td class="small text-muted">@f.Location</td>
+                                <td class="text-center fw-semibold">@f.Capacity</td>
+                                <td class="text-end fw-bold text-success">₹@f.RentalRatePerDay.ToString("N0")</td>
+                                <td class="text-center text-muted">@f.DisplayOrder</td>
+                                <td class="text-center">
+                                    @if (f.Status == HallStatus.Available)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Available</span>
+                                    }
+                                    else if (f.Status == HallStatus.UnderMaintenance)
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Maintenance</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">@f.Status.ToString()</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (f.IsActive)
+                                    {
+                                        <span class="status-dot bg-success"></span><span class="small text-success fw-semibold">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-dot bg-danger"></span><span class="small text-danger fw-semibold">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="/Facility/Edit/@f.Id" class="btn btn-light border" title="Edit">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        <form asp-controller="Facility" asp-action="ToggleActive" asp-route-id="@f.Id"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to @(f.IsActive ? "deactivate" : "activate") this facility?')">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn @(f.IsActive ? "btn-warning" : "btn-success") border" title="@(f.IsActive ? "Deactivate" : "Activate")">
+                                                <i class="bi @(f.IsActive ? "bi-pause-fill" : "bi-play-fill")"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-5">
+                                <i class="bi bi-buildings fs-2 d-block mb-2"></i>
+                                No facilities configured yet.
+                                <div class="mt-2"><a href="/Facility/Create" class="btn btn-sm btn-primary">Add First Facility</a></div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

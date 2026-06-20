@@ -1,0 +1,92 @@
+@model IOCLCommunityHall.Models.ViewModels.InventoryViewModel
+@{
+    ViewData["Title"] = "Edit Inventory Item";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header text-white" style="background-color: var(--iocl-blue);">
+                <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Inventory Item - @Model.Name</h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="ImagePath" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label iocl-form-label"></label>
+                        <input asp-for="Name" class="form-control iocl-form-control" placeholder="Item Name" required />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CategoryId" class="form-label iocl-form-label"></label>
+                        <select asp-for="CategoryId" class="form-select iocl-form-control" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="UnitType" class="form-label iocl-form-label"></label>
+                            <input asp-for="UnitType" class="form-control iocl-form-control" required />
+                            <span asp-validation-for="UnitType" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="TotalQuantity" class="form-label iocl-form-label"></label>
+                            <input asp-for="TotalQuantity" type="number" class="form-control iocl-form-control" min="0" required />
+                            <span asp-validation-for="TotalQuantity" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CurrentPrice" class="form-label iocl-form-label"></label>
+                            <input asp-for="CurrentPrice" type="number" step="0.01" class="form-control iocl-form-control" required />
+                            <span asp-validation-for="CurrentPrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ImageFile" class="form-label iocl-form-label">Replace Image</label>
+                            <input asp-for="ImageFile" type="file" class="form-control iocl-form-control" accept="image/*" />
+                            <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="isActiveCheck" name="IsActive" value="true" checked="@Model.IsActive" />
+                            <label class="form-check-label iocl-form-label mb-0" for="isActiveCheck">Item is Active & Rentable</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Description" class="form-label iocl-form-label"></label>
+                        <textarea asp-for="Description" class="form-control iocl-form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-light border">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 py-2">
+                            <i class="bi bi-save2-fill me-2"></i>Update Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview column if exists -->
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <div class="col-md-4">
+            <div class="card iocl-card shadow-sm p-4 text-center">
+                <h6 class="fw-bold text-muted mb-3">Current Uploaded Image</h6>
+                <img src="@Model.ImagePath" alt="@Model.Name" class="img-fluid rounded border shadow-sm" style="max-height: 250px; object-fit: contain;" />
+            </div>
+        </div>
+    }
+</div>

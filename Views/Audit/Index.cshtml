@@ -1,0 +1,85 @@
+@model IEnumerable<IOCLCommunityHall.Models.Entities.AuditLog>
+@{
+    ViewData["Title"] = "System Audit Trail";
+    int currentPage = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-shield-lock-fill me-2 text-danger"></i>Permanent System Activity Audit Logs</span>
+                <span class="badge bg-secondary">Total: @ViewBag.Total Logs</span>
+            </div>
+            <div class="card-body">
+                <!-- Logs Table -->
+                <div class="table-responsive mb-4">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Timestamp</th>
+                                <th>Performed By</th>
+                                <th>Action Type</th>
+                                <th>Entity / ID</th>
+                                <th>Action Details</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var log in Model)
+                                {
+                                    <tr>
+                                        <td class="ps-3 text-muted">@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                        <td>
+                                            <div class="fw-bold">@log.User?.FullName</div>
+                                            <span class="text-muted small">@log.User?.Email</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border fw-bold text-uppercase" style="font-size: 0.75rem;">@log.Action</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold">@log.EntityName</span>
+                                            <span class="text-muted small">#@log.EntityId</span>
+                                        </td>
+                                        <td><span class="small">@log.Description</span></td>
+                                        <td class="text-muted small">@log.IpAddress</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">No audit trail records found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination controls -->
+                @if (totalPages > 1)
+                {
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1 })">Previous</a>
+                            </li>
+                            @for (int p = 1; p <= totalPages; p++)
+                            {
+                                <li class="page-item @(currentPage == p ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = p })">@p</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1 })">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    </div>
+</div>

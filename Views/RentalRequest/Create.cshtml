@@ -1,0 +1,120 @@
+@model IOCLCommunityHall.Models.ViewModels.RentalRequestViewModel
+@{
+    ViewData["Title"] = "New Rental Request";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header text-white" style="background-color: var(--iocl-blue);">
+                <h4 class="mb-0"><i class="bi bi-cart-plus me-2"></i>Create New Rental Request</h4>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post" id="rentalRequestForm" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                    <!-- Event Information Section -->
+                    <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i>Event Details</h5>
+                    
+
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="EventDate" class="form-label iocl-form-label">Event Date <span class="text-danger">*</span></label>
+                                <input asp-for="EventDate" type="date" class="form-control iocl-form-control" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="EventDate" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="StartDate" class="form-label iocl-form-label">Item Required From <span class="text-danger">*</span></label>
+                                <input asp-for="StartDate" type="date" class="form-control iocl-form-control" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="StartDate" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="EndDate" class="form-label iocl-form-label">Item Required Until <span class="text-danger">*</span></label>
+                                <input asp-for="EndDate" type="date" class="form-control iocl-form-control" min="@DateTime.Today.AddDays(2).ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="EndDate" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="InPrincipalDocumentFile" class="form-label iocl-form-label">In-Principal Approval Document <span class="text-danger">*</span></label>
+                                <input asp-for="InPrincipalDocumentFile" type="file" class="form-control iocl-form-control" accept=".pdf,.png,.jpg,.jpeg" required />
+                                <span asp-validation-for="InPrincipalDocumentFile" class="text-danger small"></span>
+                                <div class="form-text text-muted small">Accepted formats: PDF, PNG, JPG, JPEG (Max 5MB)</div>
+                             </div>
+                         </div>
+                    </div>
+
+                    <!-- Items Selection Section -->
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-box-seam-fill me-2 text-primary"></i>Required Inventory Items</h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-item">
+                            <i class="bi bi-plus-circle-fill me-1"></i>Add Item Row
+                        </button>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle" id="itemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40%">Inventory Item</th>
+                                    <th style="width: 15%">Price per Unit</th>
+                                    <th style="width: 15%">Stock Available</th>
+                                    <th style="width: 15%">Required Qty</th>
+                                    <th style="width: 15%">Line Total</th>
+                                    <th style="width: 50px"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsContainer">
+                                <!-- Dynamic item rows will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Calculator Summary Bar -->
+                    <div class="card bg-light border-0 p-3 mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 text-muted small">
+                                *All prices listed are per day rental charges. Overdue charges may apply.
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <h4 class="mb-0 fw-bold">Grand Total: <span style="color: var(--iocl-orange);" id="grandTotalText">₹0.00</span></h4>
+                                <input type="hidden" name="GrandTotal" id="inputGrandTotal" value="0.00" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="MyRequests" class="btn btn-light border">Cancel & Go Back</a>
+                        <button type="submit" class="btn btn-primary px-4 py-2">
+                            <i class="bi bi-send-fill me-2"></i>Submit Rental Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/rental-calculator.js" asp-append-version="true"></script>
+    <script>
+        // Provide the available items dynamically as a JS variable for the calculator script
+        var availableItemsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AvailableItems.Select(i => new {
+            Id = i.Id,
+            Name = i.Name,
+            AvailableQuantity = i.AvailableQuantity,
+            CurrentPrice = i.CurrentPrice,
+            UnitType = i.UnitType
+        })));
+    </script>
+}

@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = "Community Halls Calendar";
+}
+
+<!-- FullCalendar CSS CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.min.css" rel="stylesheet" />
+
+<div class="row">
+    <div class="col-12">
+        <div class="card iocl-card shadow-sm">
+            <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar3 me-2 text-primary"></i>Township Community Halls Booking Schedule</span>
+                <span class="badge bg-primary">Live Calendar View</span>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info py-2 px-3 mb-4 small">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Double-click or hover over any scheduled block to view event details and booking official contacts.
+                </div>
+
+                <!-- Calendar target element -->
+                <div id="calendar" style="min-height: 600px; background-color: #ffffff;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- FullCalendar JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                themeSystem: 'bootstrap5',
+                events: '/AdminRequest/GetCalendarEvents',
+                eventClick: function(info) {
+                    alert('Event: ' + info.event.title + '\nDescription: ' + (info.event.extendedProps.description || 'None') + '\nStatus: ' + info.event.extendedProps.status);
+                },
+                eventClassNames: function(arg) {
+                    if (arg.event.extendedProps.status === 'Pending') {
+                        return [ 'bg-warning', 'text-dark', 'border-warning' ];
+                    } else if (arg.event.extendedProps.status === 'Approved') {
+                        return [ 'bg-success', 'text-white', 'border-success' ];
+                    } else {
+                        return [ 'bg-danger', 'text-white', 'border-danger' ];
+                    }
+                }
+            });
+            calendar.render();
+        });
+    </script>
+}
