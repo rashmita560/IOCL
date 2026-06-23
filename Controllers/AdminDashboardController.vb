@@ -130,42 +130,81 @@ Namespace Controllers
             Dim roles = Await _userManager.GetRolesAsync(currentUser)
             Dim currentRole = If(roles.FirstOrDefault(), "User")
 
+            ' Default statusFilter to "Pending" on load
+            If String.IsNullOrEmpty(statusFilter) Then
+                statusFilter = "Pending"
+            End If
+
+            Dim allRequests = Await _rentalService.GetAllRequestsAsync()
+
+            ' 1. Calculate Priority Ranks for Pending requests at this role's stage (excluding self requests)
+            Dim basePendingRequests = allRequests.Where(Function(r) r.Status = RequestStatus.Pending AndAlso r.UserId <> currentUser.Id)
+            If currentRole = "HOD" Then
+                basePendingRequests = basePendingRequests.Where(Function(r) r.ApprovalStage = ApprovalStage.PendingHOD)
+            ElseIf currentRole = "GM" Then
+                basePendingRequests = basePendingRequests.Where(Function(r) r.ApprovalStage = ApprovalStage.PendingGM)
+            ElseIf currentRole = "SuperAdmin" Then
+                basePendingRequests = basePendingRequests.Where(Function(r) r.ApprovalStage = ApprovalStage.PendingHR)
+            End If
+
+            Dim orderedBase = basePendingRequests.OrderBy(Function(r) r.CreatedAt).ToList()
+            Dim rankDict = New System.Collections.Generic.Dictionary(Of Integer, Integer)()
+            For i = 0 To orderedBase.Count - 1
+                rankDict(orderedBase(i).Id) = i + 1
+            Next
+            ViewBag.RankDict = rankDict
+
+            ' 2. Filter requests to show in the table
             Dim requests As IEnumerable(Of RentalRequest)
 
-            If currentRole = "SuperAdmin" Then
-                ' HR (SuperAdmin) only sees requests that:
-                '   - Have GrandTotal <= ₹10,000
-                '   - Are NOT submitted by GM (since GM is auto-approved)
-                '   - Are NOT pending HOD approval (must be approved by HOD first)
-                '   - Are NOT pending GM approval (high-value requests)
-                Dim allHR = Await _rentalService.GetAllRequestsAsync()
-                requests = allHR.Where(Function(r) r.GrandTotal <= 10000D AndAlso
-                                                   r.SubmittedByRole <> "GM" AndAlso
-                                                   r.ApprovalStage <> ApprovalStage.PendingHOD AndAlso
-                                                   r.ApprovalStage <> ApprovalStage.PendingGM)
-            ElseIf currentRole = "HOD" Then
-                ' HOD sees ALL requests for full visibility (same as SuperAdmin panel).
-                ' HOD can only approve requests that are at PendingHOD stage (enforced on Details).
-                requests = Await _rentalService.GetAllRequestsAsync()
-            ElseIf currentRole = "GM" Then
-                ' GM sees:
-                '   - All requests that route through the GM approval path (GrandTotal > ₹10,000 and not submitted by GM)
-                '   - Plus their own requests (GM's self requests, which are auto-approved)
-                Dim allGM = Await _rentalService.GetAllRequestsAsync()
-                requests = allGM.Where(Function(r) r.SubmittedByRole = "GM" OrElse
-                                                   (r.GrandTotal > 10000D AndAlso r.SubmittedByRole <> "GM"))
-            Else
-                ' Any other role falls through to stage-based filter
-                requests = Await _rentalService.GetRequestsForApproverAsync(currentUser.Id, currentRole)
-            End If
-
-            If Not String.IsNullOrEmpty(statusFilter) AndAlso statusFilter <> "All" Then
-                Dim status As RequestStatus
-                If [Enum].TryParse(statusFilter, status) Then
-                    requests = requests.Where(Function(r) r.Status = status)
+            If currentRole = "HOD" Then
+                If statusFilter = "Pending" Then
+                    requests = orderedBase
+                ElseIf statusFilter = "All" Then
+                    requests = allRequests
+                Else
+                    Dim status As RequestStatus
+                    If [Enum].TryParse(statusFilter, status) Then
+                        requests = allRequests.Where(Function(r) r.Status = status)
+                    Else
+                        requests = allRequests
+                    End If
                 End If
+
+            ElseIf currentRole = "GM" Then
+                If statusFilter = "Pending" Then
+                    requests = orderedBase
+                ElseIf statusFilter = "All" Then
+                    ' Show all requests that have gone through or are at the GM stage
+                    requests = allRequests.Where(Function(r) r.ApprovalStage = ApprovalStage.PendingGM OrElse r.GMApprovedAt IsNot Nothing)
+                Else
+                    Dim status As RequestStatus
+                    If [Enum].TryParse(statusFilter, status) Then
+                        requests = allRequests.Where(Function(r) r.Status = status AndAlso
+                                                                (r.ApprovalStage = ApprovalStage.PendingGM OrElse r.GMApprovedAt IsNot Nothing))
+                    Else
+                        requests = allRequests.Where(Function(r) r.ApprovalStage = ApprovalStage.PendingGM OrElse r.GMApprovedAt IsNot Nothing)
+                    End If
+                End If
+
+            ElseIf currentRole = "SuperAdmin" Then
+                If statusFilter = "Pending" Then
+                    requests = orderedBase
+                ElseIf statusFilter = "All" Then
+                    requests = allRequests
+                Else
+                    Dim status As RequestStatus
+                    If [Enum].TryParse(statusFilter, status) Then
+                        requests = allRequests.Where(Function(r) r.Status = status)
+                    Else
+                        requests = allRequests
+                    End If
+                End If
+            Else
+                requests = allRequests
             End If
 
+            ' Apply search filter
             If Not String.IsNullOrEmpty(search) Then
                 requests = requests.Where(Function(r) r.RequestNumber.Contains(search, StringComparison.OrdinalIgnoreCase) OrElse
                                                        r.User?.FullName.Contains(search, StringComparison.OrdinalIgnoreCase))
@@ -174,7 +213,6 @@ Namespace Controllers
             ViewBag.StatusFilter = statusFilter
             ViewBag.Search = search
             ViewBag.CurrentRole = currentRole
-            ViewBag.FCFSQueue = (Await _rentalService.GetFCFSQueueAsync()).Take(10).ToList()
             Return View(requests.ToList())
         End Function
 

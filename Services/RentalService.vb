@@ -10,16 +10,17 @@ Namespace Services
     ''' <summary>
     ''' Core rental service implementing FCFS allocation logic and multi-level approval workflow.
     '''
-    ''' APPROVAL THRESHOLD: ₹10,000
-    ''' ┌─────────────────┬──────────────┬──────────────────────────────────────────┐
-    ''' │ Submitted By    │ Amount       │ Approval Route                           │
-    ''' ├─────────────────┼──────────────┼──────────────────────────────────────────┤
-    ''' │ Employee (User) │ Any          │ HOD → HR (≤10k) / HOD → GM → HR (>10k) │
-    ''' │ HOD             │ ≤ ₹10,000   │ HR (SuperAdmin) directly                 │
-    ''' │ HOD             │ > ₹10,000   │ GM → HR (SuperAdmin)                     │
-    ''' │ GM              │ Any          │ HR (SuperAdmin) directly                 │
-    ''' │ SuperAdmin (HR) │ Any          │ GM directly                              │
-    ''' └─────────────────┴──────────────┴──────────────────────────────────────────┘
+    ''' NEW APPROVAL WORKFLOW:
+    ''' ┌─────────────────┬──────────────┬────────────────────────────────────────────────────┐
+    ''' │ Submitted By    │ Amount       │ Approval Route                                     │
+    ''' ├─────────────────┼──────────────┼────────────────────────────────────────────────────┤
+    ''' │ Employee (User) │ ≤ ₹10,000   │ HOD → SuperAdmin → Approved                        │
+    ''' │ Employee (User) │ > ₹10,000   │ HOD → GM → SuperAdmin → Approved                   │
+    ''' │ HOD             │ ≤ ₹10,000   │ SuperAdmin → Approved (skip GM)                    │
+    ''' │ HOD             │ > ₹10,000   │ GM → SuperAdmin → Approved                         │
+    ''' │ GM              │ Any Amount   │ SuperAdmin → Approved (always, regardless of amt)  │
+    ''' │ SuperAdmin      │ Any Amount   │ Auto-Approved immediately (no further approval)     │
+    ''' └─────────────────┴──────────────┴────────────────────────────────────────────────────┘
     ''' SELF-APPROVAL: A user can NEVER approve their own request (blocked in ApproveRequestAsync).
     ''' </summary>
     Public Class RentalService
@@ -78,31 +79,34 @@ Namespace Services
 
         ''' <summary>
         ''' Determines the first ApprovalStage for a new request based on who is submitting it and the total amount.
+        '''
+        ''' NEW ROUTING RULES:
+        '''   Employee (User) → always starts at HOD
+        '''   HOD             → ≤₹10k: straight to SuperAdmin (PendingHR); >₹10k: goes to GM first (PendingGM)
+        '''   GM              → always goes to SuperAdmin (PendingHR), regardless of amount
+        '''   SuperAdmin      → auto-approved (returns PendingHR so the auto-approve block fires; stage set to Approved immediately)
         ''' </summary>
         Public Function DetermineInitialStage(submitterRole As String, grandTotal As Decimal) As ApprovalStage Implements IRentalService.DetermineInitialStage
             Select Case submitterRole
-                Case "User"         ' Employee
+                Case "User"         ' Regular employee — always starts at HOD
                     Return ApprovalStage.PendingHOD
 
                 Case "HOD"
-                    ' HOD's own request skips HOD stage entirely
-                    If grandTotal <= ApprovalThreshold Then
-                        Return ApprovalStage.PendingHR  ' HR approves directly
+                    ' HOD's own request skips the HOD stage.
+                    ' > ₹10,000 → needs GM → SuperAdmin
+                    ' ≤ ₹10,000 → straight to SuperAdmin
+                    If grandTotal > ApprovalThreshold Then
+                        Return ApprovalStage.PendingGM
                     Else
-                        Return ApprovalStage.PendingGM  ' GM → HR
+                        Return ApprovalStage.PendingHR
                     End If
 
                 Case "GM"
-                    ' GM requests are auto-approved on submission — no further approval needed.
-                    Return ApprovalStage.Approved
+                    ' GM always goes directly to SuperAdmin, regardless of amount
+                    Return ApprovalStage.PendingHR
 
-                Case "SuperAdmin"   ' HR submits — route by amount
-                    If grandTotal <= ApprovalThreshold Then
-                        ' SuperAdmin IS the HR admin — auto-approve to avoid self-approval loop
-                        Return ApprovalStage.Approved
-                    Else
-                        Return ApprovalStage.PendingGM  ' High-value → GM
-                    End If
+                Case "SuperAdmin"   ' SuperAdmin is auto-approved — stage handled in CreateRequestAsync
+                    Return ApprovalStage.PendingHR
 
                 Case Else
                     Return ApprovalStage.PendingHOD
@@ -120,27 +124,33 @@ Namespace Services
         End Function
 
         ''' <summary>
-        ''' What is the next stage after the current approver approves?
-        ''' Returns Nothing if this is the final stage (request becomes Approved).
-        ''' Also considers whether the employee submitted the original request
-        ''' so we know if an HR-submitted request (GM approves) is final.
+        ''' Determines the next ApprovalStage after the current approver approves.
+        ''' Returns Nothing (null) when this is the final stage → request becomes Approved.
+        '''
+        ''' NEW ROUTING RULES:
+        '''   PendingHOD (Employee submitted)
+        '''     GrandTotal ≤ ₹10,000 → next is PendingHR  (skip GM)
+        '''     GrandTotal > ₹10,000 → next is PendingGM
+        '''   PendingGM (HOD or Employee submitted after HOD approval)
+        '''     Always → PendingHR  (SuperAdmin is always final after GM)
+        '''   PendingHR → Nothing (final)
         ''' </summary>
         Private Function GetNextStage(currentStage As ApprovalStage, submittedByRole As String, grandTotal As Decimal) As ApprovalStage?
             Select Case currentStage
                 Case ApprovalStage.PendingHOD
-                    ' After HOD approves: low-value → HR directly, high-value → GM
-                    If grandTotal <= ApprovalThreshold Then
-                        Return ApprovalStage.PendingHR
+                    ' Employee submitted — check amount to decide if GM is needed
+                    If grandTotal > ApprovalThreshold Then
+                        Return ApprovalStage.PendingGM   ' HOD → GM → SuperAdmin
                     Else
-                        Return ApprovalStage.PendingGM
+                        Return ApprovalStage.PendingHR   ' HOD → SuperAdmin (skip GM)
                     End If
 
                 Case ApprovalStage.PendingGM
-                    ' GM approval is terminal for requests above threshold
-                    Return Nothing
+                    ' GM stage is always followed by SuperAdmin (final)
+                    Return ApprovalStage.PendingHR
 
                 Case ApprovalStage.PendingHR
-                    ' HR approval is terminal for requests at or below threshold
+                    ' SuperAdmin is always the final stage
                     Return Nothing
 
                 Case Else
@@ -208,11 +218,17 @@ Namespace Services
             ' 4. Determine initial approval stage based on submitter role
             Dim initialStage = DetermineInitialStage(submitterRole, grandTotal)
 
-            ' GM and SuperAdmin (≤₹10,000) requests are auto-approved:
-            ' - GM has no approver above them for their own requests
-            ' - SuperAdmin IS the HR admin (self-approval prevention)
-            Dim isAutoApprove = (submitterRole = "GM") OrElse
-                                (submitterRole = "SuperAdmin" AndAlso grandTotal <= ApprovalThreshold)
+            ' SuperAdmin requests are auto-approved immediately — no approval chain required.
+            ' All other roles (Employee, HOD, GM) go through the normal approval chain.
+            Dim isAutoApprove = (submitterRole = "SuperAdmin")
+
+            ' When auto-approving (SuperAdmin), record HR approval fields so the audit trail is complete
+            Dim autoApproveTime As DateTime? = If(isAutoApprove, CType(DateTime.UtcNow, DateTime?), Nothing)
+            Dim autoApproverEmpId As String = String.Empty
+            If isAutoApprove Then
+                Dim submitterInfo As ApplicationUser = Await _userManager.FindByIdAsync(userId)
+                autoApproverEmpId = If(submitterInfo?.EmployeeId, If(submitterInfo?.UserName, "SYSTEM"))
+            End If
 
             Dim request = New RentalRequest With {
                 .RequestNumber = Await _requestRepo.GenerateRequestNumberAsync(),
@@ -224,10 +240,12 @@ Namespace Services
                 .InPrincipalDocumentPath = docPath,
                 .GrandTotal = grandTotal,
                 .Status = If(isAutoApprove, RequestStatus.Approved, RequestStatus.Pending),
-                .ApprovalStage = initialStage,
+                .ApprovalStage = If(isAutoApprove, ApprovalStage.Approved, initialStage),
                 .CreatedAt = DateTime.UtcNow,
-                .ReviewedAt = If(isAutoApprove, CType(DateTime.UtcNow, DateTime?), Nothing),
-                .ReviewedByEmployeeId = If(isAutoApprove, "SYSTEM", String.Empty)
+                .HRApprovedAt = autoApproveTime,
+                .HRApprovedByEmployeeId = autoApproverEmpId,
+                .ReviewedAt = autoApproveTime,
+                .ReviewedByEmployeeId = If(isAutoApprove, autoApproverEmpId, String.Empty)
             }
 
             Await _requestRepo.AddAsync(request)
@@ -299,7 +317,7 @@ Namespace Services
                 Return request
             End If
 
-            ' 6b. Notify the appropriate approver(s) for non-GM requests
+            ' 6b. Notify the appropriate approver(s) for pending requests
             Dim notifTitle = $"New Rental Request — Action Required"
             Dim notifMsg = $"Request #{request.RequestNumber} submitted by {submitterRole} requires your approval."
             Dim notifLink = $"/AdminRequest/Details/{request.Id}"

@@ -2,8 +2,8 @@
 @{
     ViewData["Title"] = "Reports";
     var months = System.Globalization.DateTimeFormatInfo.CurrentInfo;
-    var currentMonth = DateTime.Today.Month;
-    var currentYear = DateTime.Today.Year;
+    var currentMonth = ViewBag.SelectedMonth as int? ?? DateTime.Today.Month;
+    var currentYear = ViewBag.SelectedYear as int? ?? DateTime.Today.Year;
 }
 
 @* ── Rental Requests Excel Report Section ─────────────────────────────── *@
@@ -24,10 +24,9 @@
                     </div>
                 }
                 <p class="text-muted mb-3">
-                    Select a <strong>Month</strong> and <strong>Year</strong> to download a complete Excel (.xlsx) report
-                    of all Rental Requests submitted in that period — including all approval details.
+                    Select a <strong>Month</strong> and <strong>Year</strong> to generate a table report directly on screen or download a complete Excel (.xlsx) report of all Rental Requests.
                 </p>
-                <form id="rentalReportForm" method="get" asp-action="ExportRentalRequests">
+                <form id="rentalReportForm" method="get">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label iocl-form-label fw-semibold">
@@ -65,9 +64,12 @@
                                 }
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <button type="submit" class="btn btn-success px-4 py-2 fw-semibold shadow-sm" id="btnGenerateRentalReport">
-                                <i class="bi bi-download me-2"></i>Generate &amp; Download Report
+                        <div class="col-md-7 d-flex gap-2">
+                            <button type="submit" name="generateTable" value="true" formaction="@Url.Action("Index", "Reports")" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm flex-grow-1" id="btnGenerateRentalReport">
+                                <i class="bi bi-table me-2"></i>Generate Report
+                            </button>
+                            <button type="submit" formaction="@Url.Action("ExportRentalRequests", "Reports")" class="btn btn-success px-4 py-2 fw-semibold shadow-sm flex-grow-1" id="btnDownloadRentalReport">
+                                <i class="bi bi-download me-2"></i>Download Report
                             </button>
                         </div>
                     </div>
@@ -76,3 +78,134 @@
         </div>
     </div>
 </div>
+
+@* ── Generated Inline Table Report ────────────────────────────────────── *@
+@if (ViewBag.GenerateTable == true)
+{
+    var requests = ViewBag.RentalRequests as IEnumerable<IOCLCommunityHall.Models.Entities.RentalRequest>;
+    var monthName = new DateTime(currentYear, currentMonth, 1).ToString("MMMM");
+
+    <div class="card iocl-card shadow-sm border-0 mt-4">
+        <div class="card-header bg-light border-bottom d-flex justify-content-between align-items-center p-3">
+            <h5 class="mb-0 fw-bold text-dark">
+                <i class="bi bi-table me-2 text-primary"></i>Rental Requests List — @monthName @currentYear
+            </h5>
+            <span class="badge bg-primary px-3 py-2" style="font-size: 0.9rem;">Total: @(requests?.Count() ?? 0)</span>
+        </div>
+        <div class="card-body p-0">
+            @if (requests != null && requests.Any())
+            {
+                <style>
+                    .reports-table-responsive {
+                        font-size: 0.58rem !important;
+                        overflow-x: auto;
+                        width: 100%;
+                    }
+                    .reports-table {
+                        table-layout: auto;
+                        width: 100%;
+                        margin-bottom: 0;
+                    }
+                    .reports-table th,
+                    .reports-table td {
+                        padding: 0.2rem 0.25rem !important;
+                        font-size: 0.58rem !important;
+                        line-height: 1.15 !important;
+                        word-break: break-word !important;
+                        white-space: normal !important;
+                    }
+                    .reports-table th {
+                        font-weight: 700 !important;
+                        background-color: #f8f9fa !important;
+                        text-align: center !important;
+                    }
+                </style>
+                <div class="reports-table-responsive">
+                    <table class="table table-bordered table-sm table-hover align-middle mb-0 reports-table">
+                        <thead class="table-light">
+                            <tr style="text-align: center; vertical-align: middle;">
+                                <th>Request<br/>No.</th>
+                                <th>Employee<br/>ID</th>
+                                <th>Event<br/>Date</th>
+                                <th>Start<br/>Date</th>
+                                <th>End<br/>Date</th>
+                                <th>Grand Total<br/>(₹)</th>
+                                <th>Status</th>
+                                <th>Approval<br/>Stage</th>
+                                <th>HOD<br/>Emp ID</th>
+                                <th>HOD<br/>Approved At</th>
+                                <th>GM<br/>Emp ID</th>
+                                <th>GM<br/>Approved At</th>
+                                <th>HR<br/>Emp ID</th>
+                                <th>HR<br/>Approved At</th>
+                                <th>Reviewed By<br/>Emp ID</th>
+                                <th>Reviewed<br/>At</th>
+                                <th>Rejection<br/>Reason</th>
+                                <th>Submitted<br/>At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var req in requests)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-primary text-center">@req.RequestNumber</td>
+                                    <td class="text-center">@(req.User?.EmployeeId ?? req.UserId)</td>
+                                    <td class="text-center">@req.EventDate.ToString("dd-MM-yyyy")</td>
+                                    <td class="text-center">@req.StartDate.ToString("dd-MM-yyyy")</td>
+                                    <td class="text-center">@req.EndDate.ToString("dd-MM-yyyy")</td>
+                                    <td class="text-end fw-bold">@req.GrandTotal.ToString("N2")</td>
+                                    <td class="text-center">@req.Status.ToString()</td>
+                                    <td class="text-center">@req.ApprovalStage.ToString()</td>
+                                    <td class="text-center">@req.HODApprovedByEmployeeId</td>
+                                    <td class="text-center">
+                                        @if (req.HODApprovedAt.HasValue)
+                                        {
+                                            <span>@req.HODApprovedAt.Value.ToString("dd-MM-yyyy")</span><br />
+                                            <span class="text-muted">@req.HODApprovedAt.Value.ToString("HH:mm")</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">@req.GMApprovedByEmployeeId</td>
+                                    <td class="text-center">
+                                        @if (req.GMApprovedAt.HasValue)
+                                        {
+                                            <span>@req.GMApprovedAt.Value.ToString("dd-MM-yyyy")</span><br />
+                                            <span class="text-muted">@req.GMApprovedAt.Value.ToString("HH:mm")</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">@req.HRApprovedByEmployeeId</td>
+                                    <td class="text-center">
+                                        @if (req.HRApprovedAt.HasValue)
+                                        {
+                                            <span>@req.HRApprovedAt.Value.ToString("dd-MM-yyyy")</span><br />
+                                            <span class="text-muted">@req.HRApprovedAt.Value.ToString("HH:mm")</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">@req.ReviewedByEmployeeId</td>
+                                    <td class="text-center">
+                                        @if (req.ReviewedAt.HasValue)
+                                        {
+                                            <span>@req.ReviewedAt.Value.ToString("dd-MM-yyyy")</span><br />
+                                            <span class="text-muted">@req.ReviewedAt.Value.ToString("HH:mm")</span>
+                                        }
+                                    </td>
+                                    <td>@req.RejectionReason</td>
+                                    <td class="text-center">
+                                        <span>@req.CreatedAt.ToString("dd-MM-yyyy")</span><br />
+                                        <span class="text-muted">@req.CreatedAt.ToString("HH:mm")</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-folder-x fs-1 text-secondary block mb-3 d-block"></i>
+                    <div>No rental requests found for @monthName @currentYear.</div>
+                </div>
+            }
+        </div>
+    </div>
+}

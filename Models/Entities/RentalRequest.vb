@@ -83,6 +83,17 @@ Namespace Models.Entities
         <StringLength(500)>
         Public Property RejectionReason As String = String.Empty
 
+        ' ── Inventory Release Tracking ─────────────────────────────────────────────
+        ''' <summary>
+        ''' True once the background release engine has automatically returned all reserved
+        ''' inventory back to the available pool (fires at EndDate+1day 06:00 AM UTC).
+        ''' Prevents duplicate releases.
+        ''' </summary>
+        Public Property InventoryReleased As Boolean = False
+
+        ''' <summary>UTC timestamp when inventory was automatically released.</summary>
+        Public Property InventoryReleasedAt As DateTime?
+
         ' Navigation
         Public Property RentalRequestItems As ICollection(Of RentalRequestItem) = New List(Of RentalRequestItem)()
         Public Property InventoryAllocations As ICollection(Of InventoryAllocation) = New List(Of InventoryAllocation)()

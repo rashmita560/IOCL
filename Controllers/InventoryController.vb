@@ -206,13 +206,16 @@ Namespace Controllers
         Private ReadOnly _reportService As IReportService
         Private ReadOnly _userManager As UserManager(Of ApplicationUser)
         Private ReadOnly _notificationService As INotificationService
+        Private ReadOnly _context As ApplicationDbContext
 
         Public Sub New(reportService As IReportService,
                        userManager As UserManager(Of ApplicationUser),
-                       notificationService As INotificationService)
+                       notificationService As INotificationService,
+                       context As ApplicationDbContext)
             _reportService = reportService
             _userManager = userManager
             _notificationService = notificationService
+            _context = context
         End Sub
 
         Private Async Function SetNotifViewBag() As Task
@@ -226,14 +229,36 @@ Namespace Controllers
             End If
         End Function
 
-        Public Async Function Index() As Task(Of IActionResult)
+        Public Async Function Index(selectedMonth As Integer?, selectedYear As Integer?, generateTable As Boolean?) As Task(Of IActionResult)
+            Dim month = If(selectedMonth, DateTime.Today.Month)
+            Dim year = If(selectedYear, DateTime.Today.Year)
+
             Dim vm = New ReportViewModel With {
                 .ReportType = ReportType.Monthly,
-                .SelectedYear = DateTime.Today.Year,
-                .SelectedMonth = DateTime.Today.Month
+                .SelectedYear = year,
+                .SelectedMonth = month
             }
             Dim result = Await _reportService.GenerateReportAsync(vm)
             Await SetNotifViewBag()
+
+            ViewBag.SelectedMonth = month
+            ViewBag.SelectedYear = year
+
+            If generateTable.HasValue AndAlso generateTable.Value = True Then
+                ' Fetch requests for table display
+                Dim startDate As New DateTime(year, month, 1)
+                Dim endDate As DateTime = startDate.AddMonths(1)
+                
+                Dim requests = Await _context.RentalRequests _
+                    .Include(Function(r) r.User) _
+                    .Where(Function(r) r.CreatedAt >= startDate AndAlso r.CreatedAt < endDate) _
+                    .OrderBy(Function(r) r.CreatedAt) _
+                    .ToListAsync()
+
+                ViewBag.RentalRequests = requests
+                ViewBag.GenerateTable = True
+            End If
+
             Return View(result)
         End Function
 

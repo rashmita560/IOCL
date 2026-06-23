@@ -38,232 +38,246 @@ def check_allocations_db(request_id):
 def check_request_db(request_id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT Status, ApprovalStage FROM RentalRequests WHERE Id = ?", (request_id,))
+    cur.execute("""SELECT Status, ApprovalStage, HODApprovedByEmployeeId,
+                          GMApprovedByEmployeeId, HRApprovedByEmployeeId
+                   FROM RentalRequests WHERE Id = ?""", (request_id,))
     req = dict(cur.fetchone())
     conn.close()
     return req
 
-def run_tests():
-    session = requests.Session()
-
-    print("\n--- STEP 1: Log in as SuperAdmin (sysadmin@iocl.co.in) ---")
+def login(session, employee_id, password):
     login_page = session.get(f"{BASE_URL}/Account/Login")
     token = extract_token(login_page.text)
     if not token:
-        print("[-] Error: Failed to extract __RequestVerificationToken from Login page.")
-        return
-    
+        raise Exception("Failed to extract CSRF token from login page")
     login_data = {
-        "employeeId": "00000001",
-        "password": "Admin@1234",
+        "employeeId": employee_id,
+        "password": password,
         "rememberMe": "false",
         "returnUrl": "",
         "__RequestVerificationToken": token
     }
-    login_response = session.post(f"{BASE_URL}/Account/Login", data=login_data)
-    if "Login" in login_response.url:
-        print("[-] Error: Login failed.")
-        return
-    print("[+] Login as SuperAdmin successful.")
+    resp = session.post(f"{BASE_URL}/Account/Login", data=login_data)
+    if "Login" in resp.url:
+        raise Exception(f"Login failed for {employee_id}")
+    return resp
 
+def logout(session, html_with_token):
+    token = extract_token(html_with_token)
+    if token:
+        session.post(f"{BASE_URL}/Account/Logout", data={"__RequestVerificationToken": token})
+
+def create_rental_request(session, item_id, qty, unit_price, days=1):
+    """Creates a rental request and returns (request_id, reserved_before)."""
+    create_page = session.get(f"{BASE_URL}/RentalRequest/Create")
+    token = extract_token(create_page.text)
+
+    from datetime import datetime, timedelta
+    start = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+    end   = (datetime.now() + timedelta(days=3 + days - 1)).strftime("%Y-%m-%d")
+
+    req_data = {
+        "EventDate":  start,
+        "StartDate":  start,
+        "EndDate":    end,
+        f"RequestItems[0].InventoryItemId": str(item_id),
+        f"RequestItems[0].RequestedQuantity": str(qty),
+        f"RequestItems[0].CurrentPrice": str(unit_price),
+        "__RequestVerificationToken": token
+    }
+    files = {"InPrincipalDocumentFile": ("dummy.pdf", b"%PDF-1.4 dummy content", "application/pdf")}
+    session.post(f"{BASE_URL}/RentalRequest/Create", data=req_data, files=files)
+
+    my_req_page = session.get(f"{BASE_URL}/RentalRequest/MyRequests")
+    matches = re.findall(r'name="id"\s+value="(\d+)"', my_req_page.text)
+    if not matches:
+        matches = re.findall(r'/Details/(\d+)', my_req_page.text)
+    if not matches:
+        raise Exception("Could not find newly created request ID")
+    return max(int(m) for m in matches), my_req_page.text
+
+def approve_request(session, request_id):
+    details_page = session.get(f"{BASE_URL}/AdminRequest/Details/{request_id}")
+    token = extract_token(details_page.text)
+    resp = session.post(f"{BASE_URL}/AdminRequest/Approve/{request_id}", data={"__RequestVerificationToken": token})
+    return resp
+
+def run_tests():
     import sys
     sys.stdout.reconfigure(encoding='utf-8')
 
-    print("\n--- STEP 2: Try to approve Request #29 (insufficient stock) ---")
-    # Request #29 is at http://localhost:5000/AdminRequest/Details/29
-    details_page = session.get(f"{BASE_URL}/AdminRequest/Details/29")
-    token = extract_token(details_page.text)
+    # ─────────────────────────────────────────────────────────────────
+    # SCENARIO A: Employee ≤ ₹10,000  →  HOD → SuperAdmin (skip GM)
+    # Item 12 (LED Light String) at ₹50/unit × 10 units × 1 day = ₹500
+    # ─────────────────────────────────────────────────────────────────
+    print("\n" + "="*60)
+    print("SCENARIO A: Employee ≤₹10,000 → HOD → SuperAdmin (skip GM)")
+    print("="*60)
 
-    # Check request 29 status first
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT Status FROM RentalRequests WHERE Id = 29")
-    row = cur.fetchone()
-    conn.close()
-    
-    is_pending = row is not None and row[0] == 0
-    
-    if not is_pending or details_page.status_code == 404 or not token:
-        print("[!] Request #29 not found or is not Pending. Skipping Step 2 stock block test.")
-        logout_token = token
-    else:
-        approve_response = session.post(f"{BASE_URL}/AdminRequest/Approve/29", data={"__RequestVerificationToken": token})
-        
-        # Check if the error message is present in the response page immediately
-        error_msg = "Requested inventory is no longer available for the selected date range"
-        if error_msg in approve_response.text:
-            print("[+] Success: Approval correctly BLOCKED due to stock guard!")
-        else:
-            print("[-] Error: Approval was not blocked by stock guard.")
-            print(approve_response.text[:500])
-        logout_token = extract_token(approve_response.text)
+    session = requests.Session()
+    login(session, "10000001", "Admin@1234")
+    print("[+] Logged in as Employee Rajesh Sharma (10000001)")
 
-    print("\n--- STEP 3: Log out and log in as Employee Rajesh Sharma ---")
-    if logout_token:
-        session.post(f"{BASE_URL}/Account/Logout", data={"__RequestVerificationToken": logout_token})
-    
-    login_page = session.get(f"{BASE_URL}/Account/Login")
-    token = extract_token(login_page.text)
-    login_data = {
-        "employeeId": "10000001",
-        "password": "Admin@1234",
-        "rememberMe": "false",
-        "returnUrl": "",
-        "__RequestVerificationToken": token
-    }
-    session.post(f"{BASE_URL}/Account/Login", data=login_data)
-    print("[+] Logged in as Rajesh Sharma.")
+    item_before_a = check_item_db(12)
+    request_id_a, my_req_html = create_rental_request(session, item_id=12, qty=10, unit_price=50.0, days=1)
+    # Grand total = 10 × ₹50 × 1 day = ₹500 (≤ ₹10,000 → should skip GM)
+    db = check_request_db(request_id_a)
+    print(f"[+] Created Request #{request_id_a}  |  Status={db['Status']} (0=Pending), Stage={db['ApprovalStage']} (0=PendingHOD)")
+    assert db['ApprovalStage'] == 0, f"FAIL: Expected PendingHOD (0), got {db['ApprovalStage']}"
 
-    print("\n--- STEP 4: Submit a new Rental Request for LED Light String (ItemId=12, Qty=10) ---")
-    create_page = session.get(f"{BASE_URL}/RentalRequest/Create")
-    token = extract_token(create_page.text)
-    
-    # We will book for 2026-06-25 to 2026-06-26
-    req_data = {
-        "EventDate": "2026-06-25",
-        "StartDate": "2026-06-25",
-        "EndDate": "2026-06-26",
-        "RequestItems[0].InventoryItemId": "12",
-        "RequestItems[0].RequestedQuantity": "10",
-        "RequestItems[0].CurrentPrice": "50.00",
-        "__RequestVerificationToken": token
-    }
-    # Let's populate the other items with 0 quantity so model binder is happy, or just post the item we want.
-    files = {
-        "InPrincipalDocumentFile": ("dummy.pdf", b"%PDF-1.4 dummy content", "application/pdf")
-    }
-    # Let's submit:
-    create_response = session.post(f"{BASE_URL}/RentalRequest/Create", data=req_data, files=files)
-    print(f"    Create POST final URL: {create_response.url}")
-    
-    # Save create response html for debugging
-    with open("debug_create.html", "w", encoding="utf-8") as f:
-        f.write(create_response.text)
+    # HOD approves
+    logout(session, my_req_html)
+    login(session, "30000001", "Hod@1234")
+    print("[+] Logged in as HOD Arjun Mehta (30000001)")
+    resp_hod = approve_request(session, request_id_a)
+    db = check_request_db(request_id_a)
+    print(f"    After HOD Approval: Status={db['Status']}, Stage={db['ApprovalStage']} (expected 2=PendingHR — GM skipped)")
+    assert db['ApprovalStage'] == 2, f"FAIL: Expected PendingHR (2) after HOD for ≤₹10k, got {db['ApprovalStage']}"
 
-    # Let's inspect the redirect URL to find the request ID or go to My Requests to find it
-    my_requests = session.get(f"{BASE_URL}/RentalRequest/MyRequests")
-    
-    # Find request ID using regex on MyRequests page
-    # It lists requests in table rows, look for links like /RentalRequest/Details/ID, id="modal-ID", or similar
-    matches = re.findall(r'id="modal-(\d+)"', my_requests.text)
-    if not matches:
-        matches = re.findall(r'href="/RentalRequest/Details/(\d+)"', my_requests.text)
-    if not matches:
-        # Check if they are linked as AdminRequest details
-        matches = re.findall(r'/Details/(\d+)', my_requests.text)
-    if not matches:
-        # Check if they are in the hidden form input
-        matches = re.findall(r'name="id"\s+value="(\d+)"', my_requests.text)
-    
-    if not matches:
-        print("[-] Error: Could not find any request links in MyRequests page.")
-        # Let's check if there are model validation errors in the debug_create.html
-        from bs4 import BeautifulSoup
-        soup = BeautifulSoup(create_response.text, 'html.parser')
-        val_summary = soup.find(class_="text-danger")
-        if val_summary:
-            print("    Validation Error Summary:", val_summary.get_text(strip=True))
-        validation_errors = soup.find_all(class_="field-validation-error")
-        for err in validation_errors:
-            print("    Field Validation Error:", err.get_text(strip=True))
-        return
-        
-    new_request_id = max(int(m) for m in matches)
-    print(f"[+] Successfully created request with ID = {new_request_id}.")
+    # SuperAdmin approves (final)
+    logout(session, resp_hod.text)
+    login(session, "00000001", "Admin@1234")
+    print("[+] Logged in as SuperAdmin (00000001)")
+    resp_sa = approve_request(session, request_id_a)
+    db = check_request_db(request_id_a)
+    print(f"    After SuperAdmin Approval: Status={db['Status']} (1=Approved), Stage={db['ApprovalStage']} (3=Approved)")
+    assert db['Status'] == 1,          f"FAIL: Expected Status=Approved (1), got {db['Status']}"
+    assert db['ApprovalStage'] == 3,   f"FAIL: Expected Stage=Approved (3), got {db['ApprovalStage']}"
+    assert not db['GMApprovedByEmployeeId'], f"FAIL: GM should NOT have approved (got {db['GMApprovedByEmployeeId']})"
+    print("[PASS] SCENARIO A: Employee ≤₹10k correctly routed HOD → SuperAdmin (skipped GM)")
 
-    # Let's check initial DB state for new request and LED Light String
-    db_req = check_request_db(new_request_id)
-    print(f"    Initial DB State: Request Status={db_req['Status']} (0=Pending), Stage={db_req['ApprovalStage']} (0=PendingHOD)")
-    item_before = check_item_db(12)
-    print(f"    LED Light String ReservedQuantity in DB: {item_before['ReservedQuantity']}")
+    # Cancel to free inventory
+    logout(session, resp_sa.text)
+    login(session, "10000001", "Admin@1234")
+    mr = session.get(f"{BASE_URL}/RentalRequest/MyRequests")
+    token = extract_token(mr.text)
+    session.post(f"{BASE_URL}/RentalRequest/Cancel", data={"id": request_id_a, "__RequestVerificationToken": token})
 
-    print("\n--- STEP 5: Log out and log in as HOD Arjun Mehta to approve HOD stage ---")
-    logout_token = extract_token(my_requests.text)
-    session.post(f"{BASE_URL}/Account/Logout", data={"__RequestVerificationToken": logout_token})
-    
-    login_page = session.get(f"{BASE_URL}/Account/Login")
-    token = extract_token(login_page.text)
-    login_data = {
-        "employeeId": "30000001",
-        "password": "Hod@1234",
-        "rememberMe": "false",
-        "returnUrl": "",
-        "__RequestVerificationToken": token
-    }
-    session.post(f"{BASE_URL}/Account/Login", data=login_data)
-    print("[+] Logged in as HOD Arjun Mehta.")
+    # ─────────────────────────────────────────────────────────────────
+    # SCENARIO B: Employee > ₹10,000  →  HOD → GM → SuperAdmin
+    # Item 12 (LED Light String) at ₹50/unit × 10 units × 30 days = ₹15,000
+    # ─────────────────────────────────────────────────────────────────
+    print("\n" + "="*60)
+    print("SCENARIO B: Employee >₹10,000 → HOD → GM → SuperAdmin")
+    print("="*60)
 
-    # Get details page for new request and approve
-    details_page = session.get(f"{BASE_URL}/AdminRequest/Details/{new_request_id}")
-    token = extract_token(details_page.text)
-    approve_response = session.post(f"{BASE_URL}/AdminRequest/Approve/{new_request_id}", data={"__RequestVerificationToken": token})
-    
-    db_req = check_request_db(new_request_id)
-    print(f"    After HOD Approval: Request Status={db_req['Status']}, Stage={db_req['ApprovalStage']} (should be 2=PendingHR)")
+    session = requests.Session()
+    login(session, "10000001", "Admin@1234")
+    print("[+] Logged in as Employee Rajesh Sharma (10000001)")
 
-    print("\n--- STEP 6: Log out and log in as SuperAdmin to approve HR stage (final) ---")
-    logout_token = extract_token(approve_response.text)
-    session.post(f"{BASE_URL}/Account/Logout", data={"__RequestVerificationToken": logout_token})
-    
-    login_page = session.get(f"{BASE_URL}/Account/Login")
-    token = extract_token(login_page.text)
-    login_data = {
-        "employeeId": "00000001",
-        "password": "Admin@1234",
-        "rememberMe": "false",
-        "returnUrl": "",
-        "__RequestVerificationToken": token
-    }
-    session.post(f"{BASE_URL}/Account/Login", data=login_data)
-    print("[+] Logged in as SuperAdmin.")
+    item_before_b = check_item_db(12)
+    # 10 × ₹50 × 30 days = ₹15,000 > ₹10,000 → should involve GM
+    request_id_b, my_req_html = create_rental_request(session, item_id=12, qty=10, unit_price=50.0, days=30)
+    db = check_request_db(request_id_b)
+    print(f"[+] Created Request #{request_id_b}  |  Status={db['Status']}, Stage={db['ApprovalStage']} (0=PendingHOD)")
+    assert db['ApprovalStage'] == 0, f"FAIL: Expected PendingHOD (0), got {db['ApprovalStage']}"
 
-    details_page = session.get(f"{BASE_URL}/AdminRequest/Details/{new_request_id}")
-    token = extract_token(details_page.text)
-    approve_final_response = session.post(f"{BASE_URL}/AdminRequest/Approve/{new_request_id}", data={"__RequestVerificationToken": token})
+    # HOD approves → should go to GM (not HR)
+    logout(session, my_req_html)
+    login(session, "30000001", "Hod@1234")
+    print("[+] Logged in as HOD Arjun Mehta (30000001)")
+    resp_hod = approve_request(session, request_id_b)
+    db = check_request_db(request_id_b)
+    print(f"    After HOD Approval: Status={db['Status']}, Stage={db['ApprovalStage']} (expected 1=PendingGM)")
+    assert db['ApprovalStage'] == 1, f"FAIL: Expected PendingGM (1) after HOD for >₹10k, got {db['ApprovalStage']}"
 
-    db_req = check_request_db(new_request_id)
-    print(f"    After HR (Final) Approval: Request Status={db_req['Status']} (should be 1=Approved), Stage={db_req['ApprovalStage']} (should be 3=Approved)")
+    # GM approves → should go to SuperAdmin
+    logout(session, resp_hod.text)
+    login(session, "20000001", "Gm@12345")
+    print("[+] Logged in as GM Suresh Patel (20000001)")
+    resp_gm = approve_request(session, request_id_b)
+    db = check_request_db(request_id_b)
+    print(f"    After GM Approval: Status={db['Status']}, Stage={db['ApprovalStage']} (expected 2=PendingHR)")
+    assert db['ApprovalStage'] == 2, f"FAIL: Expected PendingHR (2) after GM, got {db['ApprovalStage']}"
 
-    # Verify allocation in DB
-    allocs = check_allocations_db(new_request_id)
-    print(f"    Allocations for Request #{new_request_id}:")
-    for a in allocs:
-        print(f"      - ItemId={a['InventoryItemId']}, Qty={a['AllocatedQuantity']}, Status={a['Status']}, Dates={a['StartDate'][:10]} to {a['EndDate'][:10]}")
+    # SuperAdmin approves (final)
+    logout(session, resp_gm.text)
+    login(session, "00000001", "Admin@1234")
+    print("[+] Logged in as SuperAdmin (00000001)")
+    resp_sa = approve_request(session, request_id_b)
+    db = check_request_db(request_id_b)
+    print(f"    After SuperAdmin Approval: Status={db['Status']} (1=Approved), Stage={db['ApprovalStage']} (3=Approved)")
+    assert db['Status'] == 1,        f"FAIL: Expected Approved (1), got {db['Status']}"
+    assert db['ApprovalStage'] == 3, f"FAIL: Expected Approved stage (3), got {db['ApprovalStage']}"
+    assert db['GMApprovedByEmployeeId'], "FAIL: GM should have approved"
+    print("[PASS] SCENARIO B: Employee >₹10k correctly routed HOD → GM → SuperAdmin")
 
-    item_after = check_item_db(12)
-    print(f"    LED Light String ReservedQuantity in DB after final approval: {item_after['ReservedQuantity']}")
-    print(f"    Did it increase by 10? {'Yes!' if item_after['ReservedQuantity'] == item_before['ReservedQuantity'] + 10 else 'No!'}")
+    # Cancel to free inventory
+    logout(session, resp_sa.text)
+    login(session, "10000001", "Admin@1234")
+    mr = session.get(f"{BASE_URL}/RentalRequest/MyRequests")
+    token = extract_token(mr.text)
+    session.post(f"{BASE_URL}/RentalRequest/Cancel", data={"id": request_id_b, "__RequestVerificationToken": token})
 
-    print("\n--- STEP 7: Log out and log in as Employee Rajesh Sharma to cancel the approved request ---")
-    logout_token = extract_token(approve_final_response.text)
-    session.post(f"{BASE_URL}/Account/Logout", data={"__RequestVerificationToken": logout_token})
-    
-    login_page = session.get(f"{BASE_URL}/Account/Login")
-    token = extract_token(login_page.text)
-    login_data = {
-        "employeeId": "10000001",
-        "password": "Admin@1234",
-        "rememberMe": "false",
-        "returnUrl": "",
-        "__RequestVerificationToken": token
-    }
-    session.post(f"{BASE_URL}/Account/Login", data=login_data)
-    
-    # Cancel request POST /RentalRequest/Cancel with id in the form body
-    cancel_token = extract_token(session.get(f"{BASE_URL}/RentalRequest/MyRequests").text)
-    cancel_response = session.post(f"{BASE_URL}/RentalRequest/Cancel", data={"id": new_request_id, "__RequestVerificationToken": cancel_token})
-    
-    db_req = check_request_db(new_request_id)
-    print(f"    After Cancellation: Request Status={db_req['Status']} (should be 3=Cancelled)")
+    # ─────────────────────────────────────────────────────────────────
+    # SCENARIO C: GM submits → Always SuperAdmin (any amount)
+    # ─────────────────────────────────────────────────────────────────
+    print("\n" + "="*60)
+    print("SCENARIO C: GM submits → SuperAdmin (any amount)")
+    print("="*60)
 
-    # Verify allocation is released
-    allocs = check_allocations_db(new_request_id)
-    print(f"    Allocations for Request #{new_request_id} after cancellation:")
-    for a in allocs:
-        print(f"      - ItemId={a['InventoryItemId']}, Qty={a['AllocatedQuantity']}, Status={a['Status']}")
+    session = requests.Session()
+    login(session, "20000001", "Gm@12345")
+    print("[+] Logged in as GM Suresh Patel (20000001)")
 
-    item_final = check_item_db(12)
-    print(f"    LED Light String ReservedQuantity in DB after cancellation: {item_final['ReservedQuantity']} (should be back to {item_before['ReservedQuantity']})")
+    request_id_c, my_req_html = create_rental_request(session, item_id=12, qty=5, unit_price=50.0, days=1)
+    db = check_request_db(request_id_c)
+    print(f"[+] Created Request #{request_id_c}  |  Status={db['Status']}, Stage={db['ApprovalStage']} (expected 2=PendingHR)")
+    assert db['ApprovalStage'] == 2, f"FAIL: GM request should start at PendingHR (2), got {db['ApprovalStage']}"
+    assert not db['HODApprovedByEmployeeId'], "FAIL: HOD should not have approved GM's request"
+
+    # SuperAdmin approves (final)
+    logout(session, my_req_html)
+    login(session, "00000001", "Admin@1234")
+    print("[+] Logged in as SuperAdmin (00000001)")
+    resp_sa = approve_request(session, request_id_c)
+    db = check_request_db(request_id_c)
+    print(f"    After SuperAdmin Approval: Status={db['Status']} (1=Approved), Stage={db['ApprovalStage']} (3=Approved)")
+    assert db['Status'] == 1,        f"FAIL: Expected Approved (1), got {db['Status']}"
+    assert db['ApprovalStage'] == 3, f"FAIL: Expected Approved stage (3), got {db['ApprovalStage']}"
+    assert not db['GMApprovedByEmployeeId'], "FAIL: GM should NOT approve their own request"
+    print("[PASS] SCENARIO C: GM request correctly routed directly to SuperAdmin")
+
+    # Cancel to free inventory
+    logout(session, resp_sa.text)
+    login(session, "20000001", "Gm@12345")
+    mr = session.get(f"{BASE_URL}/RentalRequest/MyRequests")
+    token = extract_token(mr.text)
+    session.post(f"{BASE_URL}/RentalRequest/Cancel", data={"id": request_id_c, "__RequestVerificationToken": token})
+
+    # ─────────────────────────────────────────────────────────────────
+    # SCENARIO D: SuperAdmin submits → Auto-Approved immediately
+    # ─────────────────────────────────────────────────────────────────
+    print("\n" + "="*60)
+    print("SCENARIO D: SuperAdmin submits → Auto-Approved immediately")
+    print("="*60)
+
+    session = requests.Session()
+    login(session, "00000001", "Admin@1234")
+    print("[+] Logged in as SuperAdmin (00000001)")
+
+    item_before_d = check_item_db(12)
+    request_id_d, my_req_html = create_rental_request(session, item_id=12, qty=3, unit_price=50.0, days=1)
+    db = check_request_db(request_id_d)
+    print(f"[+] Created Request #{request_id_d}  |  Status={db['Status']} (expected 1=Approved), Stage={db['ApprovalStage']} (expected 3=Approved)")
+    assert db['Status'] == 1,        f"FAIL: SuperAdmin request should be Auto-Approved (Status=1), got {db['Status']}"
+    assert db['ApprovalStage'] == 3, f"FAIL: SuperAdmin request should be at Approved stage (3), got {db['ApprovalStage']}"
+    assert db['HRApprovedByEmployeeId'], "FAIL: HRApprovedByEmployeeId should be set for auto-approve"
+
+    # Verify inventory was allocated immediately
+    allocs = check_allocations_db(request_id_d)
+    item_after_d = check_item_db(12)
+    print(f"    Allocations count: {len(allocs)}  |  ReservedQty before={item_before_d['ReservedQuantity']}, after={item_after_d['ReservedQuantity']}")
+    assert len(allocs) > 0, "FAIL: Inventory should have been allocated immediately on auto-approve"
+    print("[PASS] SCENARIO D: SuperAdmin request auto-approved immediately with inventory allocated")
+
+    # Cancel to free inventory
+    token = extract_token(my_req_html)
+    session.post(f"{BASE_URL}/RentalRequest/Cancel", data={"id": request_id_d, "__RequestVerificationToken": token})
+
+    print("\n" + "="*60)
+    print("ALL 4 SCENARIOS PASSED")
+    print("="*60)
 
 if __name__ == "__main__":
     run_tests()

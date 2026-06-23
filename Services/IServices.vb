@@ -56,4 +56,25 @@ Namespace Services
         Function MarkAsReadAsync(notifId As Integer) As Task
         Function MarkAllAsReadAsync(userId As String) As Task
     End Interface
+
+    ''' <summary>
+    ''' Scoped service that checks for expired inventory allocations and releases reserved stock
+    ''' back to the available pool.  Safe to call multiple times — duplicate-release protected.
+    '''
+    ''' Release condition:  DateTime.UtcNow >= EndDate.Date.AddDays(1).AddHours(6)
+    '''                     AND request.InventoryReleased = False
+    '''
+    ''' Called from:
+    '''   - InventoryReleaseService (background job, hourly)
+    '''   - NotificationActionFilter (every authenticated page load)
+    '''   - Program.ReconcileReservedQuantities (application startup)
+    ''' </summary>
+    Public Interface IInventoryReleaseEngine
+        ''' <summary>
+        ''' Scans all approved requests whose rental period has ended (EndDate+1day+06:00 UTC)
+        ''' and releases reserved inventory back to the available pool.
+        ''' Returns the number of requests whose inventory was released in this call.
+        ''' </summary>
+        Function TriggerReleaseAsync() As Task(Of Integer)
+    End Interface
 End Namespace
