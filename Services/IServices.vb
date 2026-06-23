@@ -15,6 +15,7 @@ Namespace Services
         Function GetFCFSQueueAsync() As Task(Of IEnumerable(Of RentalRequest))
         ''' <summary>Determines which ApprovalStage a request should start at given the submitter role and grand total.</summary>
         Function DetermineInitialStage(submitterRole As String, grandTotal As Decimal) As ApprovalStage
+        Function GetAvailableQuantityForDatesAsync(itemId As Integer, startDate As DateTime, endDate As DateTime, excludeRequestId As Integer) As Task(Of Integer)
     End Interface
 
     Public Interface IInventoryService

@@ -86,11 +86,13 @@
         <div class="card iocl-card shadow-sm mb-4">
             <div class="card-header iocl-card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>Rental Request #@Model.RequestNumber</span>
-                <span class="badge @(Model.Status == RequestStatus.Pending ? "badge-pending" : Model.Status == RequestStatus.Approved ? "badge-approved" : Model.Status == RequestStatus.Cancelled ? "bg-secondary text-white" : "badge-rejected") iocl-badge">
+                <span class="badge @(Model.Status == RequestStatus.Pending ? "badge-pending" : Model.Status == RequestStatus.Approved ? "badge-approved" : Model.Status == RequestStatus.Returned ? "" : Model.Status == RequestStatus.Cancelled ? "bg-secondary text-white" : "badge-rejected") iocl-badge"
+                      @(Model.Status == RequestStatus.Returned ? "style=background:#198754;color:#fff;" : "")>
                     @(Model.Status == RequestStatus.Pending ? 
                       (Model.ApprovalStage == ApprovalStage.PendingHOD ? $"PENDING TO HOD ({GetHODDisplayName(Model.User?.Department)})" : 
                        Model.ApprovalStage == ApprovalStage.PendingGM ? $"PENDING TO GM ({GetGMDisplayName()})" : 
                        Model.ApprovalStage == ApprovalStage.PendingHR ? $"PENDING TO HR ({GetHRDisplayName()})" : "PENDING") : 
+                      Model.Status == RequestStatus.Returned ? "RETURNED — STOCK RELEASED" :
                       (Model.Status == RequestStatus.Rejected ? 
                        (string.IsNullOrEmpty(Model.ReviewedByEmployeeId) ? "REJECTED" : $"Rejected by {GetUserDisplayNameByEmpId(Model.ReviewedByEmployeeId)}") : 
                        Model.Status == RequestStatus.Cancelled ? "CANCELLED" : Model.Status.ToString().ToUpper()))

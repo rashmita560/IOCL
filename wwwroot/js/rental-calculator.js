@@ -29,15 +29,46 @@ $(document).ready(function () {
             return;
         }
 
-        // Search item in pre-loaded list
-        var item = availableItemsList.find(i => i.Id == itemId);
-        if (item) {
-            row.find('.price-display').text('₹' + Number(item.CurrentPrice).toFixed(2));
-            row.find('.stock-display').text(item.AvailableQuantity);
-            row.find('.unit-display').text(item.UnitType);
-            row.find('.qty-input').attr('max', item.AvailableQuantity).val(1);
-            updateLineTotal(row);
+        // Check if this item is already selected in another row
+        var duplicate = false;
+        $('.item-select').not(select).each(function () {
+            if ($(this).val() == itemId) {
+                duplicate = true;
+            }
+        });
+
+        if (duplicate) {
+            alert('This item has already been added to your request. Please adjust the quantity on the existing row instead.');
+            select.val('');
+            row.find('.price-display').text('₹0.00');
+            row.find('.stock-display').text('0');
+            row.find('.unit-display').text('');
+            row.find('.qty-input').val(0).attr('max', 0);
+            row.find('.line-total-display').text('₹0.00');
+            calculateGrandTotal();
+            return;
         }
+
+        var startDate = $('#StartDate').val();
+        var endDate = $('#EndDate').val();
+
+        $.get('/RentalRequest/GetItemPrice', { itemId: itemId, startDate: startDate, endDate: endDate }, function (response) {
+            if (response.success) {
+                row.find('.price-display').text('₹' + Number(response.price).toFixed(2));
+                row.find('.stock-display').text(response.available);
+                row.find('.unit-display').text(response.unit);
+                row.find('.qty-input').attr('max', response.available);
+                
+                var qtyInput = row.find('.qty-input');
+                var currentQty = parseInt(qtyInput.val()) || 0;
+                if (currentQty > response.available) {
+                    qtyInput.val(response.available);
+                } else if (currentQty === 0 && response.available > 0) {
+                    qtyInput.val(1);
+                }
+                updateLineTotal(row);
+            }
+        });
     });
 
     // Handle quantity change
@@ -66,10 +97,76 @@ $(document).ready(function () {
         }
     });
 
+    // Sync datepicker constraints dynamically
+    $('#StartDate').on('change', function () {
+        var startVal = $(this).val();
+        if (startVal) {
+            $('#EndDate').attr('min', startVal);
+            var endVal = $('#EndDate').val();
+            if (endVal && new Date(endVal) < new Date(startVal)) {
+                $('#EndDate').val(startVal);
+            }
+        }
+    });
+
+    // Auto-populate StartDate and EndDate when EventDate changes
+    $('#EventDate').on('change', function () {
+        var eventVal = $(this).val();
+        if (eventVal) {
+            $('#StartDate').val(eventVal).trigger('change');
+            
+            var eventDate = new Date(eventVal);
+            eventDate.setDate(eventDate.getDate() + 1);
+            var yyyy = eventDate.getFullYear();
+            var mm = String(eventDate.getMonth() + 1).padStart(2, '0');
+            var dd = String(eventDate.getDate()).padStart(2, '0');
+            var endVal = `${yyyy}-${mm}-${dd}`;
+            $('#EndDate').val(endVal).trigger('change');
+        }
+    });
+
     // Recalculate on date changes
     $('#StartDate, #EndDate').on('change', function () {
+        updateAllRowStock();
         calculateGrandTotal();
     });
+
+    // Form submit date guard
+    $('#rentalRequestForm').on('submit', function (e) {
+        var startVal = $('#StartDate').val();
+        var endVal = $('#EndDate').val();
+        if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
+            alert('Item Required Until date cannot be earlier than Item Required From date.');
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Fetch dynamic stock for all active rows when dates change
+    function updateAllRowStock() {
+        var startDate = $('#StartDate').val();
+        var endDate = $('#EndDate').val();
+        
+        $('#itemsContainer tr').each(function () {
+            var row = $(this);
+            var itemId = row.find('.item-select').val();
+            if (itemId) {
+                $.get('/RentalRequest/GetItemPrice', { itemId: itemId, startDate: startDate, endDate: endDate }, function (response) {
+                    if (response.success) {
+                        row.find('.stock-display').text(response.available);
+                        var qtyInput = row.find('.qty-input');
+                        qtyInput.attr('max', response.available);
+                        
+                        var currentQty = parseInt(qtyInput.val()) || 0;
+                        if (currentQty > response.available) {
+                            qtyInput.val(response.available);
+                            updateLineTotal(row);
+                        }
+                    }
+                });
+            }
+        });
+    }
 
     // Add a row to the table
     function addCalculatorRow() {

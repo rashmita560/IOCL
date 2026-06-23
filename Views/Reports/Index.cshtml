@@ -13,8 +13,7 @@
             <div class="card-header text-white fw-bold d-flex align-items-center gap-2"
                  style="background: linear-gradient(135deg, #1a3a6b 0%, #0d2545 100%);">
                 <i class="bi bi-file-earmark-excel-fill fs-5 text-success"></i>
-                <span>Generate Rental Requests Report (Excel)</span>
-                <span class="ms-2 badge bg-success">New</span>
+                <span>Rental Request Analytics & Audit Report</span>
             </div>
             <div class="card-body p-4">
                 @if (TempData["Error"] != null)
@@ -70,10 +69,6 @@
                             <button type="submit" class="btn btn-success px-4 py-2 fw-semibold shadow-sm" id="btnGenerateRentalReport">
                                 <i class="bi bi-download me-2"></i>Generate &amp; Download Report
                             </button>
-                        </div>
-                        <div class="col-md-3 text-muted small d-flex align-items-center">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Downloads as <code>RentalRequests_[Month]_[Year].xlsx</code>
                         </div>
                     </div>
                 </form>

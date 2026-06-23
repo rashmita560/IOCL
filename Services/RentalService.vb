@@ -149,10 +149,26 @@ Namespace Services
         End Function
 
         Public Async Function CreateRequestAsync(vm As RentalRequestViewModel, userId As String, submitterRole As String) As Task(Of RentalRequest) Implements IRentalService.CreateRequestAsync
+            ' Validate date range
+            If vm.StartDate.Date < DateTime.Today Then
+                Throw New InvalidOperationException("Start date cannot be in the past.")
+            End If
+            If vm.EndDate.Date < vm.StartDate.Date Then
+                Throw New InvalidOperationException("Item Required Until date cannot be earlier than Item Required From date.")
+            End If
+
             ' 1. Calculate duration in days (matching frontend logic)
             Dim days As Integer = 1
             Dim timeDiff = vm.EndDate.Date - vm.StartDate.Date
             If timeDiff.Days > 0 Then days = timeDiff.Days
+
+            ' Validate that there are no duplicate items within this request
+            Dim activeItemIds = vm.RequestItems.Where(Function(ri) ri.RequestedQuantity > 0).Select(Function(ri) ri.InventoryItemId).ToList()
+            If activeItemIds.Count <> activeItemIds.Distinct().Count() Then
+                Throw New InvalidOperationException("Duplicate items are not allowed in the same rental request.")
+            End If
+
+            ' Allow multiple active requests for the same item. Real-time availability checks below will handle stock limits.
 
             ' 2. Pre-calculate grand total using actual database prices
             Dim grandTotal As Decimal = 0
@@ -162,6 +178,12 @@ Namespace Services
                 If itemVm.RequestedQuantity > 0 Then
                     Dim inventoryItem = Await _inventoryRepo.GetByIdAsync(itemVm.InventoryItemId)
                     If inventoryItem IsNot Nothing Then
+                        ' Validate stock availability for the date range
+                        Dim available = Await GetAvailableQuantityForDatesAsync(itemVm.InventoryItemId, vm.StartDate, vm.EndDate, 0)
+                        If itemVm.RequestedQuantity > available Then
+                            Throw New InvalidOperationException($"Requested quantity ({itemVm.RequestedQuantity}) for item '{inventoryItem.Name}' exceeds available stock ({available}) for the selected date range.")
+                        End If
+
                         grandTotal += CDec(itemVm.RequestedQuantity) * inventoryItem.CurrentPrice
 
                         Dim lineItem = New RentalRequestItem With {
@@ -510,7 +532,7 @@ Namespace Services
             Return True
         End Function
 
-        Private Async Function GetAvailableQuantityForDatesAsync(itemId As Integer, startDate As DateTime, endDate As DateTime, excludeRequestId As Integer) As Task(Of Integer)
+        Public Async Function GetAvailableQuantityForDatesAsync(itemId As Integer, startDate As DateTime, endDate As DateTime, excludeRequestId As Integer) As Task(Of Integer) Implements IRentalService.GetAvailableQuantityForDatesAsync
             Dim item = Await _context.InventoryItems.FindAsync(itemId)
             If item Is Nothing Then Return 0
 

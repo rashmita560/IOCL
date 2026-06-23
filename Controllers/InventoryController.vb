@@ -552,5 +552,115 @@ Namespace Controllers
             End If
             Return RedirectToAction("Users")
         End Function
+
+        ' ── System Reset (GET) ────────────────────────────────────────────────
+        <HttpGet>
+        Public Async Function SystemReset() As Task(Of IActionResult)
+            Await SetNotifViewBag()
+            ViewBag.IsPost = False
+            Return View()
+        End Function
+
+        ' ── System Reset (POST) ───────────────────────────────────────────────
+        <HttpPost>
+        <ActionName("SystemReset")>
+        <ValidateAntiForgeryToken>
+        Public Async Function SystemResetPost() As Task(Of IActionResult)
+            Await SetNotifViewBag()
+
+            Dim dbFileName = "iocl_community_hall.db"
+            Dim dbPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), dbFileName)
+            Dim backupDir = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "backup_local")
+            
+            If Not System.IO.Directory.Exists(backupDir) Then
+                System.IO.Directory.CreateDirectory(backupDir)
+            End If
+
+            Dim backupFileName = $"iocl_community_hall_backup_{DateTime.Now:yyyyMMdd_HHmmss}.db"
+            Dim backupFilePath = System.IO.Path.Combine(backupDir, backupFileName)
+
+            Try
+                If System.IO.File.Exists(dbPath) Then
+                    System.IO.File.Copy(dbPath, backupFilePath, True)
+                End If
+            Catch ex As Exception
+                TempData("Error") = "Failed to create database backup: " & ex.Message
+                ViewBag.IsPost = False
+                Return View()
+            End Try
+
+            Dim requestsDeleted As Integer = Await _context.RentalRequests.CountAsync()
+            Dim allocationsDeleted As Integer = Await _context.InventoryAllocations.CountAsync()
+            Dim transactionsDeleted As Integer = Await _context.InventoryTransactions.CountAsync()
+            Dim auditLogsDeleted As Integer = Await _context.AuditLogs.CountAsync(Function(a) a.EntityName = "RentalRequest")
+            Dim notificationsDeleted As Integer = Await _context.Notifications.CountAsync()
+
+            Using transaction = Await _context.Database.BeginTransactionAsync()
+                Try
+                    Await _context.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;")
+
+                    Await _context.Database.ExecuteSqlRawAsync("DELETE FROM RentalRequestItems;")
+                    Await _context.Database.ExecuteSqlRawAsync("DELETE FROM InventoryAllocations;")
+                    Await _context.Database.ExecuteSqlRawAsync("DELETE FROM InventoryTransactions;")
+                    Await _context.Database.ExecuteSqlRawAsync("DELETE FROM AuditLogs WHERE EntityName = 'RentalRequest';")
+                    Await _context.Database.ExecuteSqlRawAsync("DELETE FROM Notifications;")
+                    Await _context.Database.ExecuteSqlRawAsync("DELETE FROM RentalRequests;")
+
+                    Await _context.Database.ExecuteSqlRawAsync("DELETE FROM sqlite_sequence WHERE name IN ('RentalRequests', 'RentalRequestItems', 'InventoryAllocations', 'InventoryTransactions', 'Notifications', 'AuditLogs');")
+
+                    Await _context.Database.ExecuteSqlRawAsync("UPDATE InventoryItems SET TotalQuantity = 100, ReservedQuantity = 0, UpdatedAt = datetime('now');")
+
+                    Await _context.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;")
+                    Await _context.Database.ExecuteSqlRawAsync("PRAGMA foreign_key_check;")
+
+                    Await transaction.CommitAsync()
+                Catch ex As Exception
+                    transaction.Rollback()
+                    TempData("Error") = "Database reset failed during transaction: " & ex.Message
+                    ViewBag.IsPost = False
+                    Return View()
+                End Try
+            End Using
+
+            Try
+                Dim currentUser As ApplicationUser = Await _userManager.GetUserAsync(Me.User)
+                Dim auditLog = New AuditLog With {
+                    .UserId = currentUser.Id,
+                    .Action = "SystemReset",
+                    .EntityName = "System",
+                    .EntityId = "0",
+                    .OldValues = "Active State",
+                    .NewValues = "Reset State",
+                    .Description = $"Database reset performed. Backup: {backupFileName}",
+                    .IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    .CreatedAt = DateTime.UtcNow
+                }
+                _context.AuditLogs.Add(auditLog)
+                Await _context.SaveChangesAsync()
+            Catch ex As Exception
+                Console.WriteLine("Failed to write system reset audit log: " & ex.Message)
+            End Try
+
+            Dim itemsResetCount As Integer = Await _context.InventoryItems.CountAsync()
+            
+            Dim finalInventoryList = New List(Of Tuple(Of String, Integer, Integer))()
+            Dim items = Await _context.InventoryItems.ToListAsync()
+            For Each item In items
+                finalInventoryList.Add(Tuple.Create(item.Name, item.TotalQuantity, item.ReservedQuantity))
+            Next
+
+            ViewBag.IsPost = True
+            ViewBag.BackupFileName = backupFileName
+            ViewBag.RequestsDeleted = requestsDeleted
+            ViewBag.AllocationsDeleted = allocationsDeleted
+            ViewBag.TransactionsDeleted = transactionsDeleted
+            ViewBag.AuditLogsDeleted = auditLogsDeleted
+            ViewBag.NotificationsDeleted = notificationsDeleted
+            ViewBag.ItemsResetCount = itemsResetCount
+            ViewBag.FinalInventory = finalInventoryList
+
+            TempData("Success") = "System reset completed successfully! Database is back to clean slate."
+            Return View()
+        End Function
     End Class
 End Namespace

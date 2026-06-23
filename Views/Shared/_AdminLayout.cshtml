@@ -135,23 +135,19 @@
                                 <li><a asp-controller="Price" asp-action="History" class="dropdown-item"><i class="bi bi-clock-history me-2"></i>Price History</a></li>
                             </ul>
                         </li>
-                        @* Hide Analytics dropdown from frontend UI
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle px-3 py-2 text-white @((controller == "Reports" || controller == "Audit") ? "active-link" : "")" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-bar-chart-line me-1"></i>Analytics
+                        <li class="nav-item">
+                            <a asp-controller="Reports" asp-action="Index" class="nav-link px-3 py-2 text-white @(controller == "Reports" ? "active-link" : "")">
+                                <i class="bi bi-bar-chart-line me-1"></i>Reports
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a asp-controller="Reports" asp-action="Index" class="dropdown-item"><i class="bi bi-graph-up me-2"></i>Reports &amp; Analytics</a></li>
-                                <li><a asp-controller="Audit" asp-action="Index" class="dropdown-item"><i class="bi bi-journal-text me-2"></i>Audit Logs</a></li>
-                            </ul>
                         </li>
-                        *@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle px-3 py-2 text-white @(controller == "SuperAdmin" ? "active-link" : "")" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-shield-lock me-1"></i>Super Admin
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a asp-controller="SuperAdmin" asp-action="Users" class="dropdown-item"><i class="bi bi-people me-2"></i>User Accounts</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a asp-controller="SuperAdmin" asp-action="SystemReset" class="dropdown-item text-danger fw-semibold"><i class="bi bi-arrow-clockwise me-2"></i>System Reset</a></li>
                             </ul>
                         </li>
                         @* SuperAdmin self-booking links *@

@@ -67,6 +67,10 @@
         {
             return "<span class=\"badge bg-secondary text-white iocl-badge\">Cancelled</span>";
         }
+        if (r.Status == RequestStatus.Returned)
+        {
+            return "<span class=\"badge iocl-badge\" style=\"background:#198754;color:#fff;\"><i class=\"bi bi-arrow-return-left me-1\"></i>Returned</span>";
+        }
         return r.ApprovalStage switch {
             ApprovalStage.PendingHOD => $"<span class=\"badge badge-pending iocl-badge\">Pending to HOD ({GetHODDisplayName(r.User?.Department)})</span>",
             ApprovalStage.PendingGM  => $"<span class=\"badge badge-pending iocl-badge\">Pending to GM ({GetGMDisplayName()})</span>",
@@ -162,6 +166,12 @@
                                             else if (req.Status == RequestStatus.Cancelled)
                                             {
                                                 <span class="badge bg-secondary text-white iocl-badge">CANCELLED</span>
+                                            }
+                                            else if (req.Status == RequestStatus.Returned)
+                                            {
+                                                <span class="badge iocl-badge" style="background:#198754;color:#fff;">
+                                                    <i class="bi bi-arrow-return-left me-1"></i>RETURNED
+                                                </span>
                                             }
                                             else
                                             {

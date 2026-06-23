@@ -67,6 +67,10 @@ Module Program
         builder.Services.AddScoped(Of IAuditService, AuditService)()
         builder.Services.AddScoped(Of INotificationService, NotificationService)()
 
+        ' ─── Autonomous Background Services ─────────────────────────────────────
+        ' Runs hourly: auto-releases inventory stock when rental EndDate has passed
+        builder.Services.AddHostedService(Of InventoryReleaseService)()
+
         Dim app = builder.Build()
 
         ' ─── Seed Database ──────────────────────────────────────────────────────
@@ -103,11 +107,52 @@ Module Program
     End Sub
 
     ''' <summary>
-    ''' Recalculates InventoryItem.ReservedQuantity for every active item from the
-    ''' InventoryAllocations table (single source of truth). Run once at startup
-    ''' so any DB divergence accumulated by earlier bugs is corrected immediately.
+    ''' At startup: (1) auto-releases any expired allocations whose EndDate has already
+    ''' passed (filling the gap between last server run and now), then (2) recalculates
+    ''' ReservedQuantity for every item from the InventoryAllocations table.
+    ''' This ensures the DB is always consistent regardless of how long the server was offline.
     ''' </summary>
     Private Sub ReconcileReservedQuantities(context As ApplicationDbContext)
+        Dim today = DateTime.UtcNow.Date
+
+        ' Step 1 ── Release any allocations whose rental period has already ended
+        Dim expired = context.InventoryAllocations.
+            Where(Function(a) (a.Status = "Approved" OrElse a.Status = "Reserved") AndAlso
+                               a.EndDate.Date < today).
+            ToList()
+
+        For Each alloc In expired
+            alloc.Status = "Released"
+
+            ' Update linked request to Returned if still Approved/Pending
+            Dim req = context.RentalRequests.Find(alloc.RequestId)
+            If req IsNot Nothing AndAlso
+               (req.Status = Models.Entities.RequestStatus.Approved OrElse
+                req.Status = Models.Entities.RequestStatus.Pending) Then
+                req.Status = Models.Entities.RequestStatus.Returned
+                req.ReviewedAt = DateTime.UtcNow
+                req.ReviewedByEmployeeId = "SYSTEM"
+            End If
+
+            ' Log the startup release as a transaction
+            context.InventoryTransactions.Add(New Models.Entities.InventoryTransaction With {
+                .InventoryItemId = alloc.InventoryItemId,
+                .RentalRequestId = alloc.RequestId,
+                .TransactionType = Models.Entities.TransactionType.Release,
+                .QuantityChanged = alloc.AllocatedQuantity,
+                .QuantityBefore = 0,   ' Will be corrected in Step 2 reconcile
+                .QuantityAfter = 0,
+                .Notes = $"Startup reconcile: expired allocation released (EndDate {alloc.EndDate:dd MMM yyyy}).",
+                .PerformedBy = "SYSTEM (Startup Reconcile)"
+            })
+        Next
+
+        If expired.Any() Then
+            context.SaveChanges()
+        End If
+
+        ' Step 2 ── Recalculate ReservedQuantity for ALL items from the remaining
+        '           active (Approved/Reserved) allocations — single source of truth
         Dim items = context.InventoryItems.Where(Function(i) i.IsActive).ToList()
         For Each item In items
             Dim reserved = context.InventoryAllocations.

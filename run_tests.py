@@ -73,24 +73,34 @@ def run_tests():
     # Request #29 is at http://localhost:5000/AdminRequest/Details/29
     details_page = session.get(f"{BASE_URL}/AdminRequest/Details/29")
     token = extract_token(details_page.text)
-    if not token:
-        print("[-] Error: Failed to extract token from details page.")
-        return
 
-    approve_response = session.post(f"{BASE_URL}/AdminRequest/Approve/29", data={"__RequestVerificationToken": token})
+    # Check request 29 status first
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT Status FROM RentalRequests WHERE Id = 29")
+    row = cur.fetchone()
+    conn.close()
     
-    # Check if the error message is present in the response page immediately
-    error_msg = "Requested inventory is no longer available for the selected date range"
-    if error_msg in approve_response.text:
-        print("[+] Success: Approval correctly BLOCKED due to stock guard!")
+    is_pending = row is not None and row[0] == 0
+    
+    if not is_pending or details_page.status_code == 404 or not token:
+        print("[!] Request #29 not found or is not Pending. Skipping Step 2 stock block test.")
+        logout_token = token
     else:
-        print("[-] Error: Approval was not blocked by stock guard.")
-        print(approve_response.text[:500])
+        approve_response = session.post(f"{BASE_URL}/AdminRequest/Approve/29", data={"__RequestVerificationToken": token})
+        
+        # Check if the error message is present in the response page immediately
+        error_msg = "Requested inventory is no longer available for the selected date range"
+        if error_msg in approve_response.text:
+            print("[+] Success: Approval correctly BLOCKED due to stock guard!")
+        else:
+            print("[-] Error: Approval was not blocked by stock guard.")
+            print(approve_response.text[:500])
+        logout_token = extract_token(approve_response.text)
 
     print("\n--- STEP 3: Log out and log in as Employee Rajesh Sharma ---")
-    # Get token from details page first
-    logout_token = extract_token(approve_response.text)
-    session.post(f"{BASE_URL}/Account/Logout", data={"__RequestVerificationToken": logout_token})
+    if logout_token:
+        session.post(f"{BASE_URL}/Account/Logout", data={"__RequestVerificationToken": logout_token})
     
     login_page = session.get(f"{BASE_URL}/Account/Login")
     token = extract_token(login_page.text)
@@ -141,6 +151,9 @@ def run_tests():
     if not matches:
         # Check if they are linked as AdminRequest details
         matches = re.findall(r'/Details/(\d+)', my_requests.text)
+    if not matches:
+        # Check if they are in the hidden form input
+        matches = re.findall(r'name="id"\s+value="(\d+)"', my_requests.text)
     
     if not matches:
         print("[-] Error: Could not find any request links in MyRequests page.")

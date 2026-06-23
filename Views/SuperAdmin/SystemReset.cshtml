@@ -1,0 +1,222 @@
+@{
+    ViewData["Title"] = "System Database Reset";
+    ViewData["PageTitle"] = "System Reset";
+    var isPost = ViewBag.IsPost ?? false;
+}
+
+<div class="iocl-page-header">
+    <div>
+        <h1 class="iocl-page-title">System Database Reset</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb iocl-breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/"><i class="bi bi-house-fill me-1"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="/SuperAdmin/Users">Super Admin</a></li>
+                <li class="breadcrumb-item active" aria-current="page">System Reset</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible iocl-alert fade show mb-4 border-0 shadow-sm" role="alert"
+         style="border-left: 4px solid var(--color-success) !important;">
+        <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+        <span>@Html.Raw(TempData["Success"])</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible iocl-alert fade show mb-4 border-0 shadow-sm" role="alert"
+         style="border-left: 4px solid var(--color-danger) !important;">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <span>@TempData["Error"]</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (isPost)
+{
+    <!-- ═══════════════════════ POST RESET REPORT ═══════════════════════ -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card iocl-card shadow-sm border-0" style="border-left: 5px solid var(--color-success) !important;">
+                <div class="card-header text-white fw-bold bg-success d-flex align-items-center justify-content-between">
+                    <span>
+                        <i class="bi bi-clipboard-check-fill me-2"></i>Database Reset Summary
+                    </span>
+                    <span class="badge bg-white text-success">Completed</span>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">
+                        All rental requests have been successfully deleted, inventory quantities have been reset to 100, and dashboard metrics have been set to 0.
+                    </p>
+
+                    <!-- KPI Statistics Grid -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 border rounded text-center bg-light shadow-xs">
+                                <div class="text-uppercase small fw-bold text-muted mb-1">Requests Deleted</div>
+                                <h3 class="fw-bold mb-0 text-danger">@ViewBag.RequestsDeleted</h3>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 border rounded text-center bg-light shadow-xs">
+                                <div class="text-uppercase small fw-bold text-muted mb-1">Allocations Cleared</div>
+                                <h3 class="fw-bold mb-0 text-warning">@ViewBag.AllocationsDeleted</h3>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 border rounded text-center bg-light shadow-xs">
+                                <div class="text-uppercase small fw-bold text-muted mb-1">Notifications Cleared</div>
+                                <h3 class="fw-bold mb-0 text-primary">@ViewBag.NotificationsDeleted</h3>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 border rounded text-center bg-light shadow-xs">
+                                <div class="text-uppercase small fw-bold text-muted mb-1">Audit Logs Cleared</div>
+                                <h3 class="fw-bold mb-0 text-info">@ViewBag.AuditLogsDeleted</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Safety Backup Details -->
+                    <div class="alert alert-info border-0 shadow-sm d-flex align-items-start mb-4" role="alert">
+                        <i class="bi bi-shield-fill-check fs-4 me-3 text-info"></i>
+                        <div>
+                            <strong class="text-info">Safety Backup Generated!</strong>
+                            <p class="mb-1 text-dark small">A physical binary backup of the database has been successfully written before execution:</p>
+                            <code class="d-block p-2 bg-white rounded border text-monospace text-dark" style="font-size: 0.85rem; word-break: break-all;">
+                                backup_local/@ViewBag.BackupFileName
+                            </code>
+                        </div>
+                    </div>
+
+                    <!-- Final Stock Table -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-boxes me-2 text-primary"></i>Final Stock Verification values (All items set to 100)</h6>
+                        <div class="table-responsive border rounded" style="max-height: 350px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0" style="font-size:0.87rem;">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="ps-4">Item Name</th>
+                                        <th class="text-center" style="width: 150px;">Total Quantity</th>
+                                        <th class="text-center" style="width: 150px;">Reserved Quantity</th>
+                                        <th class="text-center" style="width: 150px;">Available Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (ViewBag.FinalInventory != null)
+                                    {
+                                        foreach (var item in (IEnumerable<Tuple<string, int, int>>)ViewBag.FinalInventory)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 fw-semibold text-dark">@item.Item1</td>
+                                                <td class="text-center text-primary fw-bold">@item.Item2</td>
+                                                <td class="text-center text-muted">@item.Item3</td>
+                                                <td class="text-center text-success fw-bold">@(item.Item2 - item.Item3)</td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a href="/AdminDashboard" class="btn btn-outline-primary">
+                            <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                        </a>
+                        <a href="/SuperAdmin/Users" class="btn btn-primary text-white">
+                            <i class="bi bi-people-fill me-2"></i>Manage Users
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- ═══════════════════════ GET RESET WARNING ═══════════════════════ -->
+    <div class="row g-4">
+        <!-- Main Warning Panel -->
+        <div class="col-lg-8">
+            <div class="card iocl-card shadow-sm border-0" style="border-left: 5px solid var(--color-danger) !important;">
+                <div class="card-header text-white fw-bold bg-danger d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+                    <span>Danger Zone: Database Reset</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-warning border-0 shadow-xs p-3 mb-4 d-flex align-items-start" role="alert"
+                         style="background: #FFFBEB; border-left: 3px solid var(--color-warning) !important;">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
+                        <div>
+                            <strong class="text-warning-emphasis">Critical Action Warning</strong>
+                            <p class="mb-0 text-muted small">
+                                This action will delete all transactional data including rental requests, items, allocations, transactions, audit logs, and notifications. Only categories, price settings, master employee lists, and user auth accounts will remain.
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-dark fw-semibold mb-2">The following operations will be performed safely:</p>
+                    <ul class="text-muted small mb-4">
+                        <li class="mb-2"><strong>Database backup:</strong> Creates an identical copy in the <code>backup_local/</code> directory before executing changes.</li>
+                        <li class="mb-2"><strong>Rental Requests purge:</strong> Delete all request entries across all status types (pending, approved, rejected, cancelled).</li>
+                        <li class="mb-2"><strong>Workflow & Audit reset:</strong> Clears workflow allocations, notifications, and related audit log entries.</li>
+                        <li class="mb-2"><strong>Reset Auto-Increments:</strong> Resets SQL sequence tables to ensure new request numbers start fresh.</li>
+                        <li class="mb-2"><strong>Inventory reset:</strong> Updates every inventory item's total quantity to exactly 100 and reserved quantity to 0.</li>
+                    </ul>
+
+                    <form asp-action="SystemReset" method="post" onsubmit="return confirm('WARNING: Are you absolutely sure you want to reset the database? This will erase all requests and reset inventory to 100. This action is permanent.');">
+                        @Html.AntiForgeryToken()
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="/SuperAdmin/Users" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>Cancel</a>
+                            <button type="submit" class="btn btn-danger fw-bold text-white shadow-sm">
+                                <i class="bi bi-trash-fill me-2"></i>Reset Portal Database Now
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: SQL preview & info -->
+        <div class="col-lg-4">
+            <div class="card iocl-card shadow-sm border-0">
+                <div class="card-header iocl-card-header">
+                    <i class="bi bi-code-slash me-2 text-primary"></i>SQL Transaction Script
+                </div>
+                <div class="card-body p-3">
+                    <p class="text-muted small mb-3">This SQLite transaction script will execute atomically to perform the reset operations:</p>
+                    <div style="background-color: #0c1b3e; color: #a5b4fc; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.78rem; max-height: 380px; overflow-y: auto;">
+                        <span class="text-warning">PRAGMA</span> foreign_keys = <span class="text-success">OFF</span>;<br/>
+                        <br/>
+                        <span class="text-info">DELETE FROM</span> RentalRequestItems;<br/>
+                        <span class="text-info">DELETE FROM</span> InventoryAllocations;<br/>
+                        <span class="text-info">DELETE FROM</span> InventoryTransactions;<br/>
+                        <span class="text-info">DELETE FROM</span> AuditLogs <span class="text-warning">WHERE</span> EntityName = <span class="text-success">'RentalRequest'</span>;<br/>
+                        <span class="text-info">DELETE FROM</span> Notifications;<br/>
+                        <span class="text-info">DELETE FROM</span> RentalRequests;<br/>
+                        <br/>
+                        <span class="text-info">DELETE FROM</span> sqlite_sequence <span class="text-warning">WHERE</span> name <span class="text-info">IN</span> (<br/>
+                        &nbsp;&nbsp;<span class="text-success">'RentalRequests'</span>, <span class="text-success">'RentalRequestItems'</span>, <br/>
+                        &nbsp;&nbsp;<span class="text-success">'InventoryAllocations'</span>, <span class="text-success">'InventoryTransactions'</span>, <br/>
+                        &nbsp;&nbsp;<span class="text-success">'Notifications'</span>, <span class="text-success">'AuditLogs'</span><br/>
+                        );<br/>
+                        <br/>
+                        <span class="text-info">UPDATE</span> InventoryItems <br/>
+                        <span class="text-info">SET</span> TotalQuantity = <span class="text-danger">100</span>, <br/>
+                        &nbsp;&nbsp;&nbsp;&nbsp;ReservedQuantity = <span class="text-danger">0</span>, <br/>
+                        &nbsp;&nbsp;&nbsp;&nbsp;UpdatedAt = datetime(<span class="text-success">'now'</span>);<br/>
+                        <br/>
+                        <span class="text-warning">PRAGMA</span> foreign_keys = <span class="text-success">ON</span>;<br/>
+                        <span class="text-warning">PRAGMA</span> foreign_key_check;
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

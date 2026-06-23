@@ -1,5 +1,5 @@
 import sqlite3
-db = r"IOCLCommunityHall\iocl_community_hall.db"
+db = r"iocl_community_hall.db"
 conn = sqlite3.connect(db)
 conn.row_factory = sqlite3.Row
 cur = conn.cursor()

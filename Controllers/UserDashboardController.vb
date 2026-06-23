@@ -84,7 +84,23 @@ Namespace Controllers
                 End If
             Next
 
-            Dim request = Await _rentalService.CreateRequestAsync(vm, currentUser.Id, submitterRole)
+            Dim hasError As Boolean = False
+            Dim errorMsg As String = String.Empty
+            Dim request As RentalRequest = Nothing
+
+            Try
+                request = Await _rentalService.CreateRequestAsync(vm, currentUser.Id, submitterRole)
+            Catch ex As InvalidOperationException
+                hasError = True
+                errorMsg = ex.Message
+            End Try
+
+            If hasError Then
+                ModelState.AddModelError(String.Empty, errorMsg)
+                vm.AvailableItems = (Await _inventoryService.GetInventoryForRequestAsync()).ToList()
+                Return View(vm)
+            End If
+
             TempData("Success") = $"Request #{request.RequestNumber} submitted successfully! Status: Pending approval."
             Return RedirectToAction("MyRequests")
         End Function
@@ -110,14 +126,20 @@ Namespace Controllers
 
         ' AJAX endpoint: get item price for live calculation
         <HttpGet>
-        Public Async Function GetItemPrice(itemId As Integer) As Task(Of JsonResult)
+        Public Async Function GetItemPrice(itemId As Integer, startDate As DateTime?, endDate As DateTime?) As Task(Of JsonResult)
             Dim items = Await _inventoryService.GetAllItemsAsync()
             Dim item = items.FirstOrDefault(Function(i) i.Id = itemId)
             If item Is Nothing Then Return Json(New With {.success = False})
+            
+            Dim available = item.AvailableQuantity
+            If startDate.HasValue AndAlso endDate.HasValue Then
+                available = Await _rentalService.GetAvailableQuantityForDatesAsync(itemId, startDate.Value, endDate.Value, 0)
+            End If
+
             Return Json(New With {
                 .success = True,
                 .price = item.CurrentPrice,
-                .available = item.AvailableQuantity,
+                .available = available,
                 .unit = item.UnitType
             })
         End Function
