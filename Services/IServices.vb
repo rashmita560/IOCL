@@ -31,6 +31,12 @@ Namespace Services
         Function GetLowStockItemsAsync() As Task(Of IEnumerable(Of InventoryItem))
         Function GetInventoryForRequestAsync() As Task(Of IEnumerable(Of InventoryItem))
         Function GetItemPriceJsonAsync() As Task(Of Dictionary(Of Integer, Decimal))
+        ''' <summary>
+        ''' Returns a dictionary of InventoryItemId → quantity reserved TODAY.
+        ''' Uses half-open interval: StartDate <= today AND EndDate > today.
+        ''' Only counts Approved/Reserved allocations.
+        ''' </summary>
+        Function GetTodayReservedAsync() As Task(Of Dictionary(Of Integer, Integer))
     End Interface
 
     Public Interface IReportService

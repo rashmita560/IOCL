@@ -30,7 +30,7 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label asp-for="StartDate" class="form-label iocl-form-label">Item Required From <span class="text-danger">*</span></label>
-                                <input asp-for="StartDate" type="date" class="form-control iocl-form-control" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+                                <input asp-for="StartDate" type="date" class="form-control iocl-form-control" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" readonly required />
                                 <span asp-validation-for="StartDate" class="text-danger small"></span>
                             </div>
                         </div>

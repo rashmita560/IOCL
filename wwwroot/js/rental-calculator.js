@@ -100,6 +100,11 @@ $(document).ready(function () {
     // Sync datepicker constraints dynamically
     $('#StartDate').on('change', function () {
         var startVal = $(this).val();
+        var eventVal = $('#EventDate').val();
+        if (startVal && startVal !== eventVal) {
+            $(this).val(eventVal);
+            startVal = eventVal;
+        }
         if (startVal) {
             $('#EndDate').attr('min', startVal);
             var endVal = $('#EndDate').val();

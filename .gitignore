@@ -21,3 +21,7 @@ Thumbs.db
 # User uploads
 wwwroot/uploads/
 
+# Scratch & Debug files
+*.py
+*.html
+backup_local/

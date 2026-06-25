@@ -177,6 +177,23 @@ Namespace Services
             Return items.ToDictionary(Function(i) i.Id, Function(i) i.CurrentPrice)
         End Function
 
+        Public Async Function GetTodayReservedAsync() As Task(Of Dictionary(Of Integer, Integer)) Implements IInventoryService.GetTodayReservedAsync
+            ' Use server-side date to avoid timezone issues
+            Dim today = DateTime.UtcNow.Date
+
+            ' Half-open interval: allocation is active if StartDate <= today AND EndDate > today
+            ' (matches the same logic used in GetAvailableQuantityForDatesAsync)
+            Dim activeAllocations = Await _context.InventoryAllocations _
+                .Where(Function(a) (a.Status = "Approved" OrElse a.Status = "Reserved") AndAlso
+                                    a.StartDate.Date <= today AndAlso
+                                    a.EndDate.Date > today) _
+                .GroupBy(Function(a) a.InventoryItemId) _
+                .Select(Function(g) New With {.ItemId = g.Key, .Reserved = g.Sum(Function(a) a.AllocatedQuantity)}) _
+                .ToListAsync()
+
+            Return activeAllocations.ToDictionary(Function(x) x.ItemId, Function(x) x.Reserved)
+        End Function
+
         Private Async Function SaveImageAsync(file As Microsoft.AspNetCore.Http.IFormFile, itemName As String) As Task(Of String)
             Dim uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "inventory")
             Directory.CreateDirectory(uploadsFolder)

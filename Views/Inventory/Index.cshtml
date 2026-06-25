@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Inventory Stock Management";
     var categories = ViewBag.Categories as IEnumerable<IOCLCommunityHall.Models.Entities.InventoryCategory>;
+    var todayReserved = ViewBag.TodayReserved as Dictionary<int, int> ?? new Dictionary<int, int>();
 }
 
 <div class="row">
@@ -45,9 +46,9 @@
                                 <th class="ps-3">ID</th>
                                 <th>Item Name</th>
                                 <th>Category</th>
-                                <th class="text-center">Total Qty</th>
-                                <th class="text-center">Reserved</th>
-                                <th class="text-center">Available</th>
+                                <th class="text-center">Current Total Quantity</th>
+                                <th class="text-center">Current Reserved</th>
+                                <th class="text-center">Current Available</th>
                                 <th class="text-end">Rent (Daily)</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-end pe-3">Actions</th>
@@ -58,20 +59,24 @@
                             {
                                 foreach (var item in Model)
                                 {
+                                    var currentReserved = todayReserved.ContainsKey(item.Id) ? todayReserved[item.Id] : 0;
+                                    var currentAvailable = item.TotalQuantity - currentReserved;
+                                    if (currentAvailable < 0) currentAvailable = 0;
+
                                     <tr>
                                         <td class="ps-3">#@item.Id</td>
                                         <td class="fw-bold text-dark">@item.Name</td>
                                         <td>@item.Category?.Name</td>
                                         <td class="text-center">@item.TotalQuantity</td>
-                                        <td class="text-center">@item.ReservedQuantity</td>
+                                        <td class="text-center">@currentReserved</td>
                                         <td class="text-center">
-                                            @if (item.AvailableQuantity <= 10)
+                                            @if (currentAvailable <= 10)
                                             {
-                                                <span class="badge bg-danger">@item.AvailableQuantity @item.UnitType</span>
+                                                <span class="badge bg-danger">@currentAvailable @item.UnitType</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-success">@item.AvailableQuantity @item.UnitType</span>
+                                                <span class="badge bg-success">@currentAvailable @item.UnitType</span>
                                             }
                                         </td>
                                         <td class="text-end fw-bold text-primary">₹@item.CurrentPrice.ToString("N2")</td>

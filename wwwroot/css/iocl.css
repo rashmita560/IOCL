@@ -949,3 +949,14 @@ body {
     background-color: #4b5563;
     color: #ffffff !important;
 }
+
+/* Style for read-only date fields to remove calendar icon and disable datepicker popup */
+input[type="date"][readonly] {
+    pointer-events: none;
+    background-color: #f1f5f9 !important;
+    color: #475569;
+}
+input[type="date"][readonly]::-webkit-calendar-picker-indicator {
+    display: none !important;
+    -webkit-appearance: none !important;
+}

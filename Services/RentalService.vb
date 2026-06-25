@@ -159,6 +159,9 @@ Namespace Services
         End Function
 
         Public Async Function CreateRequestAsync(vm As RentalRequestViewModel, userId As String, submitterRole As String) As Task(Of RentalRequest) Implements IRentalService.CreateRequestAsync
+            ' Enforce backend validation: ItemRequiredFrom == EventDate by overwriting StartDate with EventDate
+            vm.StartDate = vm.EventDate
+
             ' Validate date range
             If vm.StartDate.Date < DateTime.Today Then
                 Throw New InvalidOperationException("Start date cannot be in the past.")
@@ -234,7 +237,7 @@ Namespace Services
                 .RequestNumber = Await _requestRepo.GenerateRequestNumberAsync(),
                 .UserId = userId,
                 .SubmittedByRole = submitterRole,
-                .EventDate = vm.EventDate,
+                .EventDate = vm.StartDate,
                 .StartDate = vm.StartDate,
                 .EndDate = vm.EndDate,
                 .InPrincipalDocumentPath = docPath,
@@ -558,13 +561,13 @@ Namespace Services
             Dim currentDate = startDate.Date
             Dim finalDate = endDate.Date
             
-            While currentDate <= finalDate
+            While currentDate < finalDate
                 Dim reservedOnDay = Await _context.InventoryAllocations.
                     Where(Function(a) a.InventoryItemId = itemId AndAlso
                                       a.RequestId <> excludeRequestId AndAlso
                                       (a.Status = "Approved" OrElse a.Status = "Reserved") AndAlso
-                                      a.StartDate <= currentDate AndAlso
-                                      a.EndDate >= currentDate).
+                                      a.StartDate.Date <= currentDate AndAlso
+                                      a.EndDate.Date > currentDate).
                     SumAsync(Function(a) CType(a.AllocatedQuantity, Integer?))
                 
                 Dim dayReserved = If(reservedOnDay, 0)

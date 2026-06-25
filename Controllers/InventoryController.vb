@@ -49,6 +49,8 @@ Namespace Controllers
             ViewBag.Categories = Await _inventoryService.GetCategoriesAsync()
             ViewBag.Search = search
             ViewBag.CategoryFilter = categoryId
+            ' Fetch today's reserved quantities (half-open interval, server-side date)
+            ViewBag.TodayReserved = Await _inventoryService.GetTodayReservedAsync()
             Await SetNotifViewBag()
             Return View(items)
         End Function
